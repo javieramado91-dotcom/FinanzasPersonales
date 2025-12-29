@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#030712">
+    <title>Finanzas Control App</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: { 850: '#1f2937', 900: '#111827', 925: '#0b101b', 950: '#030712' },
+                        primary: { 400: '#34d399', 500: '#10b981', 600: '#059669', 900: '#064e3b' } 
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] },
+                    screens: { 'xs': '380px' }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Librerías -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .safe-top { padding-top: env(safe-area-inset-top); }
+        .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-nav { background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255, 255, 255, 0.05); }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade { animation: fadeIn 0.2s ease-out forwards; }
+        .sticky-col { position: sticky; left: 0; z-index: 20; background-color: #111827; }
+        .sticky-header { position: sticky; top: 0; z-index: 30; background-color: #030712; }
+        
+        /* Gráficos */
+        .bar-container { display: flex; align-items: flex-end; gap: 4px; height: 100%; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; group: 1; position: relative; }
+        .bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s ease-out; min-height: 4px; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 h-[100dvh] flex flex-col overflow-hidden selection:bg-primary-500 selection:text-white">
+
+    <div id="app" class="flex flex-col h-full relative w-full max-w-[1920px] mx-auto" v-cloak>
+
+        <!-- ================= LOGIN / RECUPERAR ================= -->
+        <div v-if="!user" class="fixed inset-0 z-[100] flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')] bg-cover bg-center">
+            <div class="absolute inset-0 bg-gray-950/90 backdrop-blur-sm"></div>
+            <div class="w-full h-full sm:h-auto sm:max-w-md glass-panel p-8 sm:rounded-3xl shadow-2xl relative flex flex-col justify-center animate-fade">
+                <div class="text-center mb-10">
+                    <div class="inline-flex p-4 bg-primary-500/10 rounded-3xl mb-4 ring-1 ring-primary-500/30 shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)]"><i data-lucide="wallet" class="w-10 h-10 text-primary-400"></i></div>
+                    <h1 class="text-4xl font-black tracking-tighter text-white mb-2">Finanzas<span class="text-primary-500">App</span></h1>
+                    <p class="text-gray-400 font-medium">Control total en tu bolsillo</p>
+                </div>
+
+                <!-- TABS Login/Registro (Se oculta en modo reset) -->
+                <div v-if="authMode !== 'reset'" class="flex bg-gray-900/80 p-1.5 rounded-2xl mb-8 ring-1 ring-gray-700/50">
+                    <button @click="authMode='login'" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300" :class="authMode==='login' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'">Ingresar</button>
+                    <button @click="authMode='register'" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300" :class="authMode==='register' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'">Registro</button>
+                </div>
+                
+                <!-- Header Recuperar Contraseña -->
+                <div v-else class="text-center mb-6 animate-fade">
+                    <h2 class="text-lg font-bold text-white">Recuperar Contraseña</h2>
+                    <p class="text-xs text-gray-500 mt-1">Ingresa tu correo para recibir un enlace de recuperación.</p>
+                </div>
+
+                <form @submit.prevent="handleAuth" class="space-y-4">
+                    <div class="space-y-4">
+                        <div class="relative group"><i data-lucide="mail" class="absolute left-4 top-4 w-5 h-5 text-gray-500 group-focus-within:text-primary-500 transition-colors"></i><input v-model="authForm.email" type="email" required class="w-full bg-gray-900/80 border border-gray-700 rounded-2xl pl-12 pr-4 py-4 text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-all placeholder:text-gray-600" placeholder="Correo electrónico"></div>
+                        
+                        <!-- Password (Se oculta en modo reset) -->
+                        <div v-if="authMode !== 'reset'" class="relative group">
+                            <i data-lucide="lock" class="absolute left-4 top-4 w-5 h-5 text-gray-500 group-focus-within:text-primary-500 transition-colors"></i>
+                            
+                            <!-- Input con toggle de type -->
+                            <input v-model="authForm.password" 
+                                   :type="showPassword ? 'text' : 'password'" 
+                                   required minlength="6" 
+                                   class="w-full bg-gray-900/80 border border-gray-700 rounded-2xl pl-12 pr-12 py-4 text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none transition-all placeholder:text-gray-600" 
+                                   placeholder="Contraseña">
+                            
+                            <!-- Botón Ojito -->
+                            <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-4 text-gray-500 hover:text-primary-500 transition-colors focus:outline-none">
+                                <i :data-lucide="showPassword ? 'eye-off' : 'eye'" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Link Olvidé Contraseña -->
+                    <div v-if="authMode === 'login'" class="flex justify-end">
+                        <button type="button" @click="authMode = 'reset'; authError = ''" class="text-xs font-semibold text-primary-500 hover:text-primary-400 transition-colors">¿Olvidaste tu contraseña?</button>
+                    </div>
+
+                    <div v-if="authError" class="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm flex items-center gap-3 animate-fade"><i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i> {{ authError }}</div>
+                    
+                    <button type="submit" :disabled="authLoading" class="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary-900/20 transition-all active:scale-[0.98] flex justify-center items-center gap-2 mt-4 text-base">
+                        <span v-if="authLoading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span v-else>
+                            {{ authMode === 'login' ? 'Iniciar Sesión' : (authMode === 'reset' ? 'Enviar Enlace' : 'Crear Cuenta') }}
+                        </span>
+                    </button>
+
+                    <!-- Botón Volver (Solo en reset) -->
+                    <button v-if="authMode === 'reset'" type="button" @click="authMode='login'; authError=''" class="w-full py-2 text-xs font-bold text-gray-500 hover:text-white transition-colors">
+                        Volver al inicio
+                    </button>
+                </form>
+
+                <div v-if="authMode !== 'reset'" class="mt-8 text-center">
+                    <button @click="loginWithGoogle" class="inline-flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-white transition-colors py-2 px-4 rounded-xl hover:bg-gray-800/50"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">Continuar con Google</button>
+                </div>
+
+                <!-- FIRMA LOGIN -->
+                <div class="mt-8 pt-4 border-t border-white/5 text-center">
+                    <p class="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] opacity-60">Powered by JA</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= APP PRINCIPAL ================= -->
+        <template v-if="user">
+            
+            <header class="bg-gray-950/80 backdrop-blur-xl border-b border-gray-800 safe-top sticky top-0 z-40">
+                <div class="px-4 py-3 flex items-center justify-between gap-4 max-w-7xl mx-auto">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center ring-2 ring-gray-800 overflow-hidden"><span class="font-bold text-xs text-white">{{ user.email[0].toUpperCase() }}</span></div>
+                        <div class="hidden xs:flex flex-col"><span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Hola</span><span class="text-sm font-bold text-white leading-none truncate max-w-[120px]">{{ user.email.split('@')[0] }}</span></div>
+                    </div>
+                    <div class="flex items-center bg-gray-900 rounded-full border border-gray-800 p-1 shadow-inner">
+                        <button @click="changeYear(-1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button><span class="font-mono font-bold text-primary-500 text-sm px-2">{{ currentYear }}</span><button @click="changeYear(1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="hidden md:flex items-center gap-2">
+                         <button @click="openStatsModal" class="h-9 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4"></i> Análisis</button>
+                         <button @click="openGlobalBudgetModal" class="h-9 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Config.</button>
+                         <button @click="openEntitiesModal" class="h-9 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> Cuentas</button>
+                         <button @click="logout" class="h-9 w-9 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+                <!-- MOBILE MONTH SELECTOR -->
+                <div class="md:hidden border-t border-gray-800/50 overflow-x-auto hide-scrollbar py-2 px-4 flex gap-2 snap-x">
+                     <button v-for="(m, i) in months" :key="i" @click="activeMonth = i" class="snap-center shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border" :class="activeMonth === i ? 'bg-primary-600 border-primary-500 text-white shadow-lg shadow-primary-900/50' : 'bg-gray-900 border-gray-800 text-gray-500 hover:text-gray-300'">{{ m }}</button>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-hidden relative w-full h-full bg-gray-950">
+                <div v-if="loading" class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-950/90 backdrop-blur-sm"><div class="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"></div></div>
+
+                <!-- VISTA MÓVIL -->
+                <div class="md:hidden h-full overflow-y-auto pb-24 px-4 pt-4 custom-scrollbar">
+                    <div class="bg-gradient-to-br from-gray-900 to-gray-925 border border-gray-800 rounded-3xl p-5 mb-6 shadow-xl relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                        <div class="flex justify-between items-end mb-4 relative z-10">
+                            <div><p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Gasto Real {{ months[activeMonth] }}</p><h2 class="text-3xl font-black text-white tracking-tight font-mono">{{ formatCurrency(getMonthGrandTotal(activeMonth)) }}</h2></div>
+                            <div class="text-right"><div class="flex items-center justify-end gap-1 mb-1 cursor-pointer" @click="openBudgetModal(activeMonth)"><p class="text-[10px] text-gray-500 font-bold uppercase">Ingreso</p><i data-lucide="edit-2" class="w-3 h-3 text-primary-500"></i></div><p class="text-sm font-mono font-bold cursor-pointer" :class="getBudgetStatusClass(activeMonth)" @click="openBudgetModal(activeMonth)">{{ formatCurrency(getEffectiveIncome(activeMonth)) }}</p></div>
+                        </div>
+                        <div class="relative z-10"><div class="flex justify-between text-[10px] font-bold text-gray-500 mb-1.5"><span>{{ Math.round((getMonthGrandTotal(activeMonth) / getBudgetLimit(activeMonth)) * 100) || 0 }}% consumido</span><span>{{ formatCurrency(Math.max(0, getBudgetLimit(activeMonth) - getMonthGrandTotal(activeMonth))) }} restante</span></div><div class="h-3 w-full bg-gray-950 rounded-full overflow-hidden border border-gray-800/50"><div class="h-full rounded-full transition-all duration-700 ease-out shadow-lg" :class="getBudgetBgClass(activeMonth)" :style="{ width: Math.min((getMonthGrandTotal(activeMonth) / getBudgetLimit(activeMonth)) * 100, 100) + '%' }"></div></div></div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div v-if="sortedEntities.length === 0" class="text-center py-10"><div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-800 border-dashed"><i data-lucide="layers" class="text-gray-600"></i></div><p class="text-gray-500 font-medium">No hay cuentas</p><button @click="openEntitiesModal" class="mt-4 text-primary-500 font-bold text-sm">Crear Cuenta</button></div>
+                        <div v-for="ent in sortedEntities" :key="ent.id" class="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden transition-all duration-300" :class="{'ring-1 ring-gray-700 bg-gray-900': expandedEntity === ent.id}">
+                            <div @click="toggleEntity(ent.id)" class="p-4 flex items-center justify-between cursor-pointer active:bg-gray-800 transition-colors">
+                                <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg" :class="ent.color">{{ ent.name.substring(0,2).toUpperCase() }}</div><div class="flex flex-col"><span class="font-bold text-sm text-gray-200">{{ ent.name }}</span><span class="text-[10px] text-gray-500 font-bold uppercase">{{ getItems(ent.name, activeMonth).length }} movs</span></div></div>
+                                <div class="flex items-center gap-3"><span class="font-mono font-bold text-white text-sm">{{ formatCurrency(getMonthEntityTotal(ent.name, activeMonth)) }}</span><i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform duration-300" :class="{'rotate-180': expandedEntity === ent.id}"></i></div>
+                            </div>
+                            <div v-if="expandedEntity === ent.id" class="border-t border-gray-800 bg-gray-950/50 animate-fade"><div v-if="getItems(ent.name, activeMonth).length === 0" class="p-4 text-center text-gray-600 text-xs italic">Sin movimientos</div><div v-else class="divide-y divide-gray-800/50"><div v-for="item in getItems(ent.name, activeMonth)" :key="item.id" @click="openEditModal(item)" class="p-3.5 flex items-center justify-between hover:bg-gray-900/80 active:bg-gray-900 transition cursor-pointer pl-6 border-l-2 border-transparent hover:border-primary-500"><div class="flex flex-col gap-0.5"><span class="text-sm font-medium text-gray-300">{{ item.name }}</span><span class="text-[10px] text-gray-500 flex items-center gap-1"><i :data-lucide="item.type === 'recurring' ? 'refresh-cw' : 'layers'" class="w-3 h-3"></i>{{ item.type === 'recurring' ? 'Fijo' : `Cuota ${item.installment_index}/${item.total_installments}` }}</span></div><span class="font-mono font-bold text-sm text-primary-400">{{ formatCurrency(item.amount) }}</span></div></div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- FIRMA MOVIL -->
+                    <div class="py-6 mt-4 text-center">
+                        <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.2em] opacity-60">Powered by JA</p>
+                    </div>
+                </div>
+
+                <!-- VISTA ESCRITORIO -->
+                <div class="hidden md:block h-full overflow-auto custom-scrollbar relative">
+                    <table class="w-full border-collapse min-w-[1200px]">
+                        <thead class="sticky-header shadow-md"><tr class="text-[10px] uppercase font-black text-gray-500 bg-gray-950 tracking-wider"><th class="p-4 text-left w-56 sticky-col border-b border-gray-800 z-20">Entidades</th><th v-for="(m, i) in months" :key="i" class="p-4 text-right border-b border-gray-800 min-w-[120px]" :class="{'bg-primary-950/10 text-primary-400': isCurrentMonth(i)}">{{ m }}</th><th class="p-4 text-right border-b border-gray-800 bg-gray-900 text-white w-32">Total</th></tr></thead>
+                        <tbody class="text-sm font-medium">
+                            <tr v-if="sortedEntities.length === 0 && !loading"><td colspan="14" class="p-20 text-center text-gray-500">Agrega cuentas para comenzar</td></tr>
+                            <tr v-for="ent in sortedEntities" :key="ent.id" class="group hover:bg-gray-900/30 transition-colors">
+                                <td @click="toggleDesktopCollapse(ent.id)" class="p-3 sticky-col border-b border-gray-800 bg-gray-900/95 group-hover:bg-gray-800 transition-colors cursor-pointer border-r border-gray-800">
+                                    <div class="flex items-center gap-3"><button class="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-white transition"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': isDesktopCollapsed(ent.id)}"></i></button><div class="w-1.5 h-8 rounded-full" :class="ent.color"></div><span class="font-bold text-white text-sm">{{ ent.name }}</span></div>
+                                </td>
+                                <td v-for="(m, i) in months" :key="i" class="p-1.5 border-b border-gray-800 align-top" :class="{'bg-primary-900/5': isCurrentMonth(i)}">
+                                    <div v-if="!isDesktopCollapsed(ent.id)" class="flex flex-col gap-1 min-h-[40px]"><div v-for="item in getItems(ent.name, i)" :key="item.id" class="group/item relative bg-gray-900/60 hover:bg-gray-800 p-2.5 rounded-xl border border-gray-800 transition-all cursor-pointer shadow-sm flex flex-col justify-between h-full hover:border-gray-600" @click="openEditModal(item)"><div class="flex justify-between items-start gap-2 mb-1"><span class="text-[10px] font-semibold text-gray-200 truncate leading-tight w-full">{{ item.name }}</span></div><div class="flex justify-between items-end"><div class="flex items-center gap-1 text-[9px] text-gray-500 font-mono"><i :data-lucide="item.type === 'recurring' ? 'refresh-cw' : 'layers'" class="w-2.5 h-2.5"></i>{{ item.type === 'recurring' ? 'F' : `${item.installment_index}/${item.total_installments}` }}</div><span class="text-[10px] font-mono font-bold text-primary-400">{{ formatCurrency(item.amount) }}</span></div></div></div>
+                                    <div v-else class="h-10 flex items-center justify-end pr-2"><span v-if="getItems(ent.name, i).length > 0" class="font-mono font-bold text-gray-400 text-xs hover:text-white transition cursor-help" :title="getItems(ent.name, i).length + ' movimientos'">{{ formatCurrency(getItems(ent.name, i).reduce((sum, item) => sum + item.amount, 0)) }}</span><span v-else class="text-gray-800 text-xs font-mono">-</span></div>
+                                </td>
+                                <td class="p-4 text-right font-mono font-bold text-gray-400 border-b border-gray-800 bg-gray-900/30 text-xs">{{ formatCurrency(getYearEntityTotal(ent.name)) }}</td>
+                            </tr>
+                            <tr v-if="sortedEntities.length > 0" class="sticky bottom-0 z-40 bg-gray-900 border-t-2 border-gray-800 shadow-2xl">
+                                <td class="p-4 sticky-col bg-gray-900 text-xs font-black uppercase text-gray-400 tracking-widest border-r border-gray-800"><div class="flex flex-col"><span>Total Mensual</span><span class="text-[9px] text-gray-600 normal-case mt-1 font-normal">(Click en monto para editar)</span></div></td>
+                                <td v-for="(m, i) in months" :key="'tot-'+i" class="p-4 text-right font-mono font-bold text-sm border-r border-gray-800/50 relative overflow-hidden group cursor-pointer hover:bg-gray-800 transition-colors" @click="openBudgetModal(i)" :title="'Editar presupuesto de ' + m"><div v-if="getBudgetLimit(i) > 0" class="absolute inset-0 opacity-10 transition-colors duration-500" :class="getBudgetBgClass(i)"></div><div class="relative z-10 flex flex-col items-end"><span>{{ formatCurrency(getMonthGrandTotal(i)) }}</span><div v-if="getBudgetLimit(i) > 0" class="h-1 w-full bg-gray-800 mt-2 rounded-full overflow-hidden"><div class="h-full rounded-full transition-all duration-500" :class="getBudgetBgClass(i)" :style="{ width: Math.min((getMonthGrandTotal(i) / getBudgetLimit(i)) * 100, 100) + '%' }"></div></div></div></td>
+                                <td class="p-4 text-right text-base text-white font-mono bg-gray-850 border-t border-gray-700">{{ formatCurrency(getYearGrandTotal()) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- FIRMA ESCRITORIO -->
+                    <div class="py-8 text-center bg-gray-950 border-t border-gray-800 mt-4">
+                        <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.2em] opacity-60">Powered by JA</p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- FAB & NAV -->
+            <div class="fixed right-4 bottom-24 md:bottom-8 z-50"><button @click="openExpenseModal" class="w-14 h-14 md:w-12 md:h-12 rounded-2xl bg-primary-500 hover:bg-primary-400 text-white shadow-2xl shadow-primary-500/40 flex items-center justify-center transition-transform active:scale-90 border border-white/10"><i data-lucide="plus" class="w-8 h-8 md:w-6 md:h-6"></i></button></div>
+            <nav class="md:hidden fixed bottom-0 left-0 right-0 glass-nav safe-bottom z-50 flex justify-around items-center h-20 px-2">
+                <button @click="activeView='home'" class="flex flex-col items-center justify-center w-14 gap-1 text-primary-400"><i data-lucide="home" class="w-5 h-5"></i><span class="text-[9px] font-bold">Inicio</span></button>
+                <button @click="openEntitiesModal" class="flex flex-col items-center justify-center w-14 gap-1 text-gray-500 active:text-gray-300"><i data-lucide="credit-card" class="w-5 h-5"></i><span class="text-[9px] font-bold">Cuentas</span></button>
+                <div class="w-8"></div>
+                <button @click="openStatsModal" class="flex flex-col items-center justify-center w-14 gap-1 text-gray-500 active:text-gray-300"><i data-lucide="bar-chart-3" class="w-5 h-5"></i><span class="text-[9px] font-bold">Análisis</span></button>
+                <button @click="openGlobalBudgetModal" class="flex flex-col items-center justify-center w-14 gap-1 text-gray-500 active:text-gray-300"><i data-lucide="settings-2" class="w-5 h-5"></i><span class="text-[9px] font-bold">Config</span></button>
+            </nav>
+
+        </template>
+
+        <!-- ================= MODALES ================= -->
+
+        <!-- 5. ESTADÍSTICAS (NUEVO) -->
+        <div v-if="modals.stats" class="fixed inset-0 z-[100] bg-gray-950 md:bg-black/90 md:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade">
+            <div class="bg-gray-950 md:bg-gray-900 w-full h-full md:h-auto md:max-w-4xl md:rounded-3xl border-none md:border border-gray-800 flex flex-col overflow-hidden shadow-2xl">
+                <div class="p-5 border-b border-gray-800 flex justify-between items-center safe-top bg-gray-950 md:bg-gray-900">
+                    <h2 class="text-xl font-black text-white flex items-center gap-3"><i data-lucide="pie-chart" class="text-primary-500"></i> Análisis {{ currentYear }}</h2>
+                    <button @click="modals.stats=false" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-gray-950 md:bg-gray-900/50">
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-gray-900 p-4 rounded-2xl border border-gray-800"><p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Gasto Total Anual</p><p class="text-xl md:text-2xl font-black text-white font-mono">{{ formatCurrency(getYearGrandTotal()) }}</p></div>
+                        <div class="bg-gray-900 p-4 rounded-2xl border border-gray-800"><p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Promedio Mensual</p><p class="text-xl md:text-2xl font-black text-primary-400 font-mono">{{ formatCurrency(getYearGrandTotal() / 12) }}</p></div>
+                        <div class="bg-gray-900 p-4 rounded-2xl border border-gray-800"><p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Mes Mayor Gasto</p><p class="text-lg font-bold text-white">{{ stats.maxMonth.name }}</p><p class="text-xs text-gray-500 font-mono">{{ formatCurrency(stats.maxMonth.amount) }}</p></div>
+                        <div class="bg-gray-900 p-4 rounded-2xl border border-gray-800"><p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Entidad Top</p><p class="text-lg font-bold text-white truncate">{{ stats.topEntity.name }}</p><p class="text-xs text-gray-500 font-mono">{{ stats.topEntity.percent }}% del total</p></div>
+                    </div>
+
+                    <!-- GRÁFICO BARRAS MENSUALES -->
+                    <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800 mb-8">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Evolución Mensual</h3>
+                        <div class="h-48 md:h-64 w-full">
+                            <div class="bar-container">
+                                <div v-for="(m, i) in months" :key="i" class="bar-col group">
+                                    <div class="text-[9px] font-mono text-gray-400 opacity-0 group-hover:opacity-100 absolute -top-6 transition-opacity bg-gray-800 px-1.5 py-0.5 rounded whitespace-nowrap border border-gray-700 z-10">{{ formatCurrency(getMonthGrandTotal(i)) }}</div>
+                                    <div class="bar bg-primary-600 hover:bg-primary-500 relative" :style="{ height: Math.max((getMonthGrandTotal(i) / stats.maxMonthValue) * 100, 4) + '%', opacity: getMonthGrandTotal(i) > 0 ? 1 : 0.1 }"></div>
+                                    <span class="text-[9px] text-gray-500 mt-2 font-bold uppercase">{{ m }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- TOP ENTIDADES (MICRO) -->
+                        <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Gasto por Cuenta</h3>
+                            <div class="space-y-4">
+                                <div v-for="ent in stats.entities" :key="ent.id" class="group">
+                                    <div class="flex justify-between items-center mb-1 text-sm">
+                                        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" :class="ent.color"></div><span class="font-bold text-gray-300">{{ ent.name }}</span></div>
+                                        <div class="text-right"><span class="font-mono text-white font-bold">{{ formatCurrency(ent.total) }}</span></div>
+                                    </div>
+                                    <div class="h-2 w-full bg-gray-950 rounded-full overflow-hidden"><div class="h-full rounded-full opacity-80 group-hover:opacity-100 transition-opacity" :class="ent.color" :style="{ width: ent.percent + '%' }"></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOP GASTOS -->
+                        <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Mayores Gastos</h3>
+                            <div class="space-y-3">
+                                <div v-for="item in stats.topExpenses" :key="item.id" class="flex justify-between items-center p-3 bg-gray-950/50 rounded-xl border border-gray-800">
+                                    <div class="flex flex-col overflow-hidden mr-3">
+                                        <span class="text-sm font-bold text-white truncate">{{ item.name }}</span>
+                                        <span class="text-[10px] text-gray-500">{{ months[item.month] }} • {{ item.entity }}</span>
+                                    </div>
+                                    <span class="font-mono font-bold text-primary-400 text-sm whitespace-nowrap">{{ formatCurrency(item.amount) }}</span>
+                                </div>
+                                <div v-if="stats.topExpenses.length === 0" class="text-center text-gray-600 text-xs py-4">Sin datos suficientes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODALES EXISTENTES (Ocultos por defecto) -->
+        <div v-if="modals.expense" class="fixed inset-0 z-[100] bg-gray-950 md:bg-black/90 md:backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade"><div class="bg-gray-950 md:bg-gray-900 w-full h-full md:h-auto md:max-w-lg md:rounded-3xl border-none md:border border-gray-800 shadow-2xl flex flex-col"><div class="p-4 md:p-5 border-b border-gray-800 flex justify-between items-center bg-gray-950 md:bg-gray-900 safe-top"><button @click="modals.expense=false" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:text-white"><i data-lucide="arrow-left"></i></button><h3 class="font-black text-white text-lg tracking-tight">Nuevo Movimiento</h3><button @click="modals.expense=false" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:text-white"><i data-lucide="x"></i></button></div><div class="p-4 md:p-6 overflow-y-auto flex-1"><form @submit.prevent="addExpense" class="space-y-6 pb-20 md:pb-0"><div class="flex bg-gray-900 p-1.5 rounded-2xl border border-gray-800"><button type="button" @click="form.type='installment'" class="flex-1 py-3 text-xs font-black uppercase rounded-xl transition-all" :class="form.type==='installment' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-500'">Cuotas</button><button type="button" @click="form.type='recurring'" class="flex-1 py-3 text-xs font-black uppercase rounded-xl transition-all" :class="form.type==='recurring' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-500'">Fijo</button></div><div class="space-y-5"><div><label class="text-[10px] uppercase font-black text-gray-500 ml-2 tracking-widest mb-1 block">Cuenta</label><div class="relative"><select v-model="form.entity" required class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-5 py-4 text-white outline-none focus:border-primary-500 appearance-none text-base"><option value="" disabled>Seleccionar...</option><option v-for="ent in sortedEntities" :key="ent.id" :value="ent.name">{{ ent.name }}</option></select><i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5 pointer-events-none"></i></div></div><div><label class="text-[10px] uppercase font-black text-gray-500 ml-2 tracking-widest mb-1 block">Concepto</label><input v-model="form.name" type="text" placeholder="Ej: Supermercado" required class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-5 py-4 text-white outline-none focus:border-primary-500 text-base placeholder:text-gray-600"></div><div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] uppercase font-black text-gray-500 ml-2 tracking-widest mb-1 block">Valor</label><div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span><input v-model.number="form.amount" required type="number" step="0.01" inputmode="decimal" class="w-full bg-gray-900 border border-gray-700 rounded-2xl pl-8 pr-4 py-4 font-mono font-bold text-primary-400 outline-none focus:border-primary-500 text-lg"></div></div><div><label class="text-[10px] uppercase font-black text-gray-500 ml-2 tracking-widest mb-1 block">{{ form.type === 'installment' ? 'Cuotas' : 'Meses' }}</label><input v-if="form.type === 'installment'" v-model.number="form.installments" required type="number" min="1" max="60" inputmode="numeric" class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-4 text-center font-bold text-white outline-none focus:border-primary-500 text-lg"><div v-else class="flex items-center h-[62px]"><label class="flex items-center gap-2 cursor-pointer w-full justify-center bg-gray-900 border border-gray-700 h-full rounded-2xl hover:border-gray-500 transition active:bg-gray-800"><input type="checkbox" v-model="form.indefinite" class="rounded bg-gray-800 border-gray-600 text-purple-500 focus:ring-0 w-5 h-5"><span class="text-xs font-bold text-gray-300">Indefinido</span></label></div></div></div><div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800"><label class="text-[10px] uppercase font-black text-gray-500 tracking-widest block mb-2">Comienza en</label><div class="grid grid-cols-2 gap-3"><select v-model.number="form.startMonth" class="bg-gray-950 border border-gray-700 rounded-xl px-3 py-3 text-white outline-none focus:border-primary-500 text-sm"><option v-for="(m, i) in months" :key="i" :value="i">{{ m }}</option></select><input v-model.number="form.startYear" type="number" class="bg-gray-950 border border-gray-700 rounded-xl px-3 py-3 text-center text-white outline-none focus:border-primary-500 text-sm"></div></div></div><div v-if="form.amount && form.type === 'installment'" class="bg-gray-800/50 p-4 rounded-2xl text-center border border-gray-700/50 mt-4"><p class="text-[10px] text-gray-400 mb-1 uppercase font-bold tracking-wider">Total Final a Pagar</p><p class="text-2xl font-mono font-black text-white">{{ formatCurrency(form.amount * form.installments) }}</p></div><button type="submit" class="w-full py-5 rounded-2xl font-black shadow-xl shadow-primary-900/20 transition-all active:scale-[0.98] bg-primary-600 text-white text-lg">GUARDAR MOVIMIENTO</button></form></div></div></div>
+        <div v-if="modals.editItem" class="fixed inset-0 z-[100] bg-gray-950 md:bg-black/90 md:backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade"><div class="bg-gray-950 md:bg-gray-900 w-full md:max-w-sm md:rounded-3xl border-t md:border border-gray-800 shadow-2xl overflow-hidden rounded-t-[2rem]"><div class="p-5 border-b border-gray-800 flex justify-between items-center safe-top"><h3 class="font-bold text-white text-lg">Editar Gasto</h3><button @click="modals.editItem=false" class="text-gray-500 hover:text-white bg-gray-900 p-2 rounded-full"><i data-lucide="x"></i></button></div><div class="p-6 space-y-5 pb-10 safe-bottom"><div><label class="text-[10px] font-bold text-gray-500 uppercase ml-2 block mb-1">Concepto</label><input v-model="editForm.name" type="text" class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-3.5 text-white outline-none focus:border-primary-500 text-base"></div><div><label class="text-[10px] font-bold text-gray-500 uppercase ml-2 block mb-1">Valor Cuota</label><div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span><input v-model.number="editForm.amount" type="number" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-2xl pl-8 pr-4 py-3.5 font-mono font-bold text-white outline-none focus:border-primary-500 text-lg"></div></div><div class="bg-gray-900 p-3 rounded-2xl border border-gray-800"><label class="text-[10px] font-bold text-gray-500 uppercase ml-2 block mb-1">Mover mes</label><select v-model.number="editForm.month" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-3 text-white outline-none text-sm"><option v-for="(m, i) in months" :key="i" :value="i">{{ m }}</option></select></div><div class="grid grid-cols-2 gap-3 pt-2"><button @click="updateItem" class="bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold transition text-sm">Guardar</button><button @click="deleteItem(editForm)" class="bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-600/30 py-4 rounded-xl font-bold transition text-sm">Eliminar</button></div></div></div></div>
+        <div v-if="modals.entities" class="fixed inset-0 z-[100] bg-gray-950 md:bg-black/90 md:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade"><div class="bg-gray-950 md:bg-gray-900 w-full h-full md:h-auto md:max-w-md md:rounded-[2.5rem] border-none md:border border-gray-800 flex flex-col"><div class="p-5 border-b border-gray-800 flex justify-between items-center safe-top bg-gray-950 md:bg-gray-900"><button @click="modals.entities=false" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:text-white"><i data-lucide="arrow-left"></i></button><h2 class="text-lg font-black text-white">Mis Cuentas</h2><button @click="modals.entities=false" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 hover:text-white"><i data-lucide="x"></i></button></div><div class="p-6 overflow-y-auto flex-1 custom-scrollbar"><div class="bg-gray-900 p-5 rounded-3xl border border-gray-800 mb-8 shadow-lg"><label class="text-[10px] uppercase font-black text-gray-500 ml-2 tracking-widest">Nueva Cuenta</label><input v-model="entityForm.name" type="text" placeholder="Ej: Visa Débito" class="w-full bg-transparent border-b border-gray-700 py-3 outline-none focus:border-primary-500 font-bold text-xl mb-6 text-white placeholder:text-gray-700"><label class="text-[10px] uppercase font-black text-gray-500 ml-2 tracking-widest block mb-4">Color Identificador</label><div class="grid grid-cols-6 gap-3 mb-8"><button v-for="c in availableColors" :key="c" @click="entityForm.color = c" class="w-full aspect-square rounded-full transition-all border-4 flex items-center justify-center" :class="[c, entityForm.color === c ? 'border-white scale-110 shadow-lg ring-2 ring-white/20' : 'border-transparent opacity-30 hover:opacity-100']"><i v-if="entityForm.color === c" data-lucide="check" class="w-3 h-3 text-white"></i></button></div><button @click="saveEntity" class="w-full bg-white text-gray-950 py-4 rounded-xl font-black transition-all shadow-lg active:scale-[0.98] hover:bg-gray-200">{{ entityForm.id ? 'ACTUALIZAR' : 'CREAR CUENTA' }}</button></div><div class="space-y-3 pb-20"><div v-for="ent in sortedEntities" :key="ent.id" class="flex items-center justify-between p-4 bg-gray-900/50 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-xl shadow-lg flex items-center justify-center text-white font-bold text-xs" :class="ent.color">{{ ent.name.substring(0,2).toUpperCase() }}</div><span class="font-bold text-sm text-white">{{ ent.name }}</span></div><div class="flex gap-2"><button @click="editEntity(ent)" class="p-2 text-gray-400 hover:text-white bg-gray-800 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button @click="deleteEntity(ent)" class="p-2 text-red-500 hover:bg-red-900/30 bg-gray-800 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div></div></div></div></div>
+        <div v-if="modals.budget" class="fixed inset-0 z-[100] bg-gray-950 md:bg-black/90 md:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade"><div class="bg-gray-950 md:bg-gray-900 w-full md:max-w-sm md:rounded-[2.5rem] border-t md:border border-gray-800 rounded-t-[2.5rem]"><div class="p-6 border-b border-gray-800 flex justify-between items-center safe-top"><div class="flex flex-col"><h2 class="font-black text-sm uppercase tracking-widest text-white">Presupuesto</h2><span v-if="budgetForm.monthIndex !== null" class="text-xs text-primary-500 font-bold">{{ months[budgetForm.monthIndex] }} {{ currentYear }}</span><span v-else class="text-xs text-gray-500 font-bold">Configuración Global (Base)</span></div><button @click="modals.budget = false" class="text-gray-500 p-2 hover:text-white"><i data-lucide="x"></i></button></div><div class="p-8 space-y-8 text-center pb-12 safe-bottom"><div class="space-y-4"><label class="text-[10px] uppercase font-black text-gray-500 block tracking-widest">{{ budgetForm.monthIndex !== null ? `Ingreso para ${months[budgetForm.monthIndex]}` : 'Ingreso Base Mensual' }}</label><div class="flex items-center justify-center gap-2 bg-gray-950 p-6 rounded-3xl border border-gray-800"><span class="text-2xl font-black text-gray-600">$</span><input v-model.number="budgetForm.income" type="number" inputmode="decimal" class="bg-transparent text-4xl font-mono font-black text-white text-center outline-none w-48 border-b border-gray-700 focus:border-primary-500 transition placeholder-gray-800" placeholder="0"></div><p v-if="budgetForm.monthIndex !== null" class="text-xs text-gray-500 italic">Si no se define, se usará el del mes anterior.</p></div><div class="space-y-4"><div class="flex justify-between items-center text-[10px] font-black uppercase tracking-widest"><span class="text-gray-500">Alerta al gastar el</span><span class="text-primary-500 bg-primary-500/10 px-2 py-1 rounded">{{ budgetForm.limitPercent }}%</span></div><input type="range" v-model.number="budgetForm.limitPercent" min="1" max="100" class="w-full h-2 bg-gray-800 rounded-lg appearance-none accent-primary-500 cursor-pointer"></div><button @click="saveBudget" class="w-full bg-primary-600 py-5 rounded-2xl font-black text-white shadow-xl shadow-primary-600/20 active:scale-[0.98] transition-all">{{ budgetForm.monthIndex !== null ? 'GUARDAR ESTE MES' : 'GUARDAR GLOBAL' }}</button></div></div></div>
+
+    </div>
+
+    <!-- ================= LOGICA ================= -->
+    <script type="module">
+        import { createApp, ref, computed, onMounted, nextTick, watch } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, setDoc } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
+        const firebaseConfig = { apiKey: "AIzaSyBt2Zi_7YYYsP9Ma-qiZiELIKAa6W9p5AU", authDomain: "finanzas-ab92c.firebaseapp.com", projectId: "finanzas-ab92c", storageBucket: "finanzas-ab92c.firebasestorage.app", messagingSenderId: "1051275642170", appId: "1:1051275642170:web:d4cc574d0262e321be7c03", measurementId: "G-MDH5DELCP7" };
+
+        createApp({
+            setup() {
+                const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                const availableColors = ['bg-slate-600', 'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-600', 'bg-blue-600', 'bg-indigo-500', 'bg-violet-600', 'bg-purple-600', 'bg-pink-600', 'bg-rose-500'];
+                
+                const currentYear = ref(new Date().getFullYear());
+                const activeMonth = ref(new Date().getMonth()); 
+                const activeView = ref('home');
+                const expandedEntity = ref(null);
+                const desktopCollapsed = ref({});
+
+                const transactions = ref([]);
+                const entities = ref([]);
+                const user = ref(null);
+                const loading = ref(true);
+                const modals = ref({ expense: false, entities: false, budget: false, editItem: false, stats: false });
+                
+                const authMode = ref('login');
+                const authForm = ref({ email: '', password: '' });
+                const authError = ref('');
+                const authLoading = ref(false);
+                const showPassword = ref(false); // Nuevo state para el ojito
+
+                const budget = ref({ income: 0, limitPercent: 80, monthlyIncomes: {} });
+                const budgetForm = ref({ income: 0, limitPercent: 80, monthIndex: null });
+                
+                const form = ref({ type: 'installment', name: '', amount: '', installments: 1, indefinite: false, recurringMonths: 12, entity: '', startMonth: new Date().getMonth(), startYear: new Date().getFullYear() });
+                const editForm = ref({ id: null, name: '', amount: 0, month: 0 });
+                const entityForm = ref({ id: null, name: '', color: availableColors[6] });
+
+                const firebaseApp = initializeApp(firebaseConfig);
+                const auth = getAuth(firebaseApp);
+                const db = getFirestore(firebaseApp);
+
+                const handleAuth = async () => { 
+                    authLoading.value = true; 
+                    authError.value = ''; 
+                    try { 
+                        if (authMode.value === 'reset') {
+                            await sendPasswordResetEmail(auth, authForm.value.email);
+                            alert("¡Listo! Revisa tu correo para cambiar la contraseña.");
+                            authMode.value = 'login';
+                        }
+                        else if (authMode.value === 'login') {
+                            await signInWithEmailAndPassword(auth, authForm.value.email, authForm.value.password);
+                        } 
+                        else {
+                            await createUserWithEmailAndPassword(auth, authForm.value.email, authForm.value.password);
+                        }
+                    } catch(e) { 
+                        if (authMode.value === 'reset') authError.value = "Error: Verifica que el correo sea correcto.";
+                        else authError.value = "Error: Verifica tus datos o contraseña."; 
+                    } finally { 
+                        authLoading.value = false; 
+                    } 
+                };
+                
+                const loginWithGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e) { authError.value = "Error Google Auth."; } };
+                const logout = () => signOut(auth);
+
+                const subscribeToData = (uid) => {
+                    loading.value = true;
+                    onSnapshot(collection(db, `users/${uid}/transactions`), (s) => { transactions.value = s.docs.map(d => ({ id: d.id, ...d.data() })); loading.value = false; nextTick(()=>lucide.createIcons()); });
+                    onSnapshot(collection(db, `users/${uid}/entities`), (s) => entities.value = s.docs.map(d => ({ id: d.id, ...d.data() })));
+                    onSnapshot(doc(db, `users/${uid}/settings/budget`), (s) => { if(s.exists()) { const data = s.data(); budget.value = { income: data.income || 0, limitPercent: data.limitPercent || 80, monthlyIncomes: data.monthlyIncomes || {} }; } });
+                };
+
+                const currentYearTransactions = computed(() => transactions.value.filter(t => t.year === currentYear.value));
+                const sortedEntities = computed(() => [...entities.value].sort((a,b) => a.name.localeCompare(b.name)));
+                const isCurrentMonth = (m) => new Date().getFullYear() === currentYear.value && new Date().getMonth() === m;
+                const formatCurrency = (val) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+                
+                const getItems = (ent, m) => currentYearTransactions.value.filter(t => t.entity === ent && t.month === m);
+                const getMonthEntityTotal = (ent, m) => getItems(ent, m).reduce((acc, t) => acc + t.amount, 0);
+                const getYearEntityTotal = (ent) => currentYearTransactions.value.filter(t => t.entity === ent).reduce((acc, t) => acc + t.amount, 0);
+                const getMonthGrandTotal = (m) => currentYearTransactions.value.filter(t => t.month === m).reduce((acc, t) => acc + t.amount, 0);
+                const getYearGrandTotal = () => currentYearTransactions.value.reduce((acc, t) => acc + t.amount, 0);
+
+                const getEffectiveIncome = (m) => {
+                    const key = `${currentYear.value}-${m}`;
+                    if (budget.value.monthlyIncomes && budget.value.monthlyIncomes[key] !== undefined) return budget.value.monthlyIncomes[key];
+                    for (let i = m - 1; i >= 0; i--) { const prevKey = `${currentYear.value}-${i}`; if (budget.value.monthlyIncomes && budget.value.monthlyIncomes[prevKey] !== undefined) return budget.value.monthlyIncomes[prevKey]; }
+                    return budget.value.income || 0;
+                };
+
+                const getBudgetLimit = (m) => { const income = getEffectiveIncome(m); return income ? (income * (budget.value.limitPercent / 100)) : 0; };
+                const getBudgetStatusClass = (m) => { const limit = getBudgetLimit(m); if (!limit) return 'text-primary-500'; const total = getMonthGrandTotal(m); if (total > limit) return 'text-red-500'; if (total > limit * 0.8) return 'text-yellow-500'; return 'text-primary-500'; };
+                const getBudgetBgClass = (m) => { const limit = getBudgetLimit(m); if (!limit) return 'bg-gray-700'; const total = getMonthGrandTotal(m); if (total > limit) return 'bg-red-500 shadow-red-500/50'; if (total > limit * 0.8) return 'bg-yellow-500 shadow-yellow-500/50'; return 'bg-primary-500 shadow-primary-500/50'; };
+
+                const toggleEntity = (id) => expandedEntity.value = expandedEntity.value === id ? null : id;
+                const toggleDesktopCollapse = (id) => { desktopCollapsed.value[id] = !desktopCollapsed.value[id]; nextTick(() => lucide.createIcons()); };
+                const isDesktopCollapsed = (id) => !!desktopCollapsed.value[id];
+
+                // --- STATS LOGIC ---
+                const stats = computed(() => {
+                    const grandTotal = getYearGrandTotal();
+                    const maxMonthValue = Math.max(...months.map((_, i) => getMonthGrandTotal(i)));
+                    const maxMonthIndex = months.findIndex((_, i) => getMonthGrandTotal(i) === maxMonthValue);
+                    
+                    const entitiesStats = sortedEntities.value.map(ent => {
+                        const total = getYearEntityTotal(ent.name);
+                        return { 
+                            id: ent.id, name: ent.name, color: ent.color, total, 
+                            percent: grandTotal ? Math.round((total / grandTotal) * 100) : 0 
+                        };
+                    }).sort((a,b) => b.total - a.total);
+
+                    const topExpenses = [...currentYearTransactions.value]
+                        .sort((a,b) => b.amount - a.amount)
+                        .slice(0, 5);
+
+                    return {
+                        grandTotal,
+                        maxMonthValue,
+                        maxMonth: { name: months[maxMonthIndex], amount: maxMonthValue },
+                        entities: entitiesStats,
+                        topEntity: entitiesStats[0] || { name: 'N/A', percent: 0 },
+                        topExpenses
+                    };
+                });
+
+                const openGlobalBudgetModal = () => { budgetForm.value = { income: budget.value.income, limitPercent: budget.value.limitPercent, monthIndex: null }; modals.value.budget = true; };
+                const openBudgetModal = (monthIndex) => { const key = `${currentYear.value}-${monthIndex}`; const existingOverride = budget.value.monthlyIncomes?.[key]; budgetForm.value = { income: existingOverride !== undefined ? existingOverride : getEffectiveIncome(monthIndex), limitPercent: budget.value.limitPercent, monthIndex: monthIndex }; modals.value.budget = true; };
+                const saveBudget = async () => { if (!user.value) return; const newBudget = { ...budget.value }; newBudget.limitPercent = budgetForm.value.limitPercent; if (budgetForm.value.monthIndex === null) { newBudget.income = budgetForm.value.income; } else { if (!newBudget.monthlyIncomes) newBudget.monthlyIncomes = {}; const key = `${currentYear.value}-${budgetForm.value.monthIndex}`; newBudget.monthlyIncomes[key] = budgetForm.value.income; } await setDoc(doc(db, `users/${user.value.uid}/settings/budget`), newBudget); modals.value.budget = false; };
+                
+                const addExpense = async () => { if(!user.value || !form.value.entity) return; const { type, name, amount, installments, indefinite, recurringMonths, entity, startMonth, startYear } = form.value; const batch = writeBatch(db); const groupId = Date.now().toString(); let loopCount = type === 'installment' ? installments : (indefinite ? 60 : recurringMonths); let monthlyAmount = amount; for(let i=0; i<loopCount; i++){ let totalM = startMonth + i; let y = startYear + Math.floor(totalM / 12); let m = totalM % 12; const ref = doc(collection(db, `users/${user.value.uid}/transactions`)); batch.set(ref, { group_id: groupId, type, name, amount: monthlyAmount, entity, month: m, year: y, installment_index: i+1, total_installments: loopCount, createdAt: new Date() }); } await batch.commit(); modals.value.expense = false; form.value.name = ''; form.value.amount = ''; form.value.startMonth = activeMonth.value; form.value.startYear = currentYear.value; };
+                const updateItem = async () => { if (!editForm.value.id) return; await updateDoc(doc(db, `users/${user.value.uid}/transactions`, editForm.value.id), { name: editForm.value.name, amount: editForm.value.amount, month: editForm.value.month }); modals.value.editItem = false; };
+                const deleteItem = async (item) => { if(confirm("¿Eliminar?")) { await deleteDoc(doc(db, `users/${user.value.uid}/transactions`, item.id)); modals.value.editItem = false; } };
+                const saveEntity = async () => { if(!entityForm.value.name) return; const col = collection(db, `users/${user.value.uid}/entities`); if(entityForm.value.id) await updateDoc(doc(col, entityForm.value.id), { name: entityForm.value.name, color: entityForm.value.color }); else await addDoc(col, { name: entityForm.value.name, color: entityForm.value.color }); modals.value.entities = false; entityForm.value = { id: null, name: '', color: availableColors[6] }; };
+                
+                const editEntity = (ent) => { entityForm.value = { ...ent }; modals.value.entities = true; };
+                const deleteEntity = async (ent) => { if(confirm("¿Borrar cuenta?")) await deleteDoc(doc(db, `users/${user.value.uid}/entities`, ent.id)); };
+                const openEditModal = (item) => { editForm.value = { ...item }; modals.value.editItem = true; };
+
+                onMounted(() => { onAuthStateChanged(auth, (u) => { user.value = u; if (u) subscribeToData(u.uid); else { transactions.value = []; entities.value = []; loading.value = false; } nextTick(() => lucide.createIcons()); }); });
+                
+                // Agregamos showPassword al watcher para que actualice los iconos
+                watch([transactions, modals, activeMonth, desktopCollapsed, budget, showPassword], () => nextTick(() => lucide.createIcons()));
+
+                return {
+                    months, currentYear, user, loading, sortedEntities, modals, form, entityForm, availableColors, authMode, authForm, authError, authLoading, budget, budgetForm, editForm, stats,
+                    activeMonth, activeView, expandedEntity, toggleEntity, desktopCollapsed, toggleDesktopCollapse, isDesktopCollapsed, showPassword,
+                    changeYear: (d) => currentYear.value += d, loginWithGoogle, handleAuth, logout,
+                    addExpense, updateItem, deleteItem, saveEntity, editEntity, deleteEntity, saveBudget, openEditModal, openGlobalBudgetModal, openBudgetModal,
+                    openExpenseModal: () => { form.value.startMonth = activeMonth.value; if(entities.value.length===0) modals.value.entities=true; else modals.value.expense=true; },
+                    openEntitiesModal: () => { entityForm.value = { id: null, name: '', color: availableColors[6] }; modals.value.entities = true; },
+                    openStatsModal: () => modals.value.stats = true,
+                    getItems, getMonthEntityTotal, getYearEntityTotal, getMonthGrandTotal, getYearGrandTotal, formatCurrency, isCurrentMonth, getEffectiveIncome, getBudgetLimit, getBudgetStatusClass, getBudgetBgClass
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
