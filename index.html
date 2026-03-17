@@ -423,25 +423,39 @@
                     newBudget.limitPercent = budgetForm.value.limitPercent; 
                     
                     if (budgetForm.value.monthIndex === null) { 
+                        // Modo Global
                         const actualCurrentMonth = new Date().getMonth();
                         const actualCurrentYear = new Date().getFullYear();
                         
                         if (!newBudget.monthlyIncomes) newBudget.monthlyIncomes = {};
                         
-                        if (currentYear.value === actualCurrentYear) {
-                            for (let i = 0; i < actualCurrentMonth; i++) {
-                                const key = `${actualCurrentYear}-${i}`;
-                                if (newBudget.monthlyIncomes[key] === undefined) {
-                                    newBudget.monthlyIncomes[key] = budget.value.income || 0;
-                                }
+                        // 1. Congelar los meses pasados del año actual con el valor anterior
+                        for (let i = 0; i < actualCurrentMonth; i++) {
+                            const key = `${actualCurrentYear}-${i}`;
+                            if (newBudget.monthlyIncomes[key] === undefined) {
+                                newBudget.monthlyIncomes[key] = budget.value.income || 0;
                             }
                         }
+                        
+                        // 2. Limpiar configuraciones específicas del mes actual en adelante
+                        Object.keys(newBudget.monthlyIncomes).forEach(key => {
+                            const [yearStr, monthStr] = key.split('-');
+                            const y = parseInt(yearStr);
+                            const m = parseInt(monthStr);
+                            if (y > actualCurrentYear || (y === actualCurrentYear && m >= actualCurrentMonth)) {
+                                delete newBudget.monthlyIncomes[key];
+                            }
+                        });
+
+                        // 3. Guardar el nuevo monto base
                         newBudget.income = budgetForm.value.income; 
                     } else { 
+                        // Modo Mes Específico
                         if (!newBudget.monthlyIncomes) newBudget.monthlyIncomes = {}; 
                         const key = `${currentYear.value}-${budgetForm.value.monthIndex}`; 
                         newBudget.monthlyIncomes[key] = budgetForm.value.income; 
                     } 
+                    
                     await setDoc(doc(db, `users/${user.value.uid}/settings/budget`), newBudget); 
                     modals.value.budget = false; 
                 };
