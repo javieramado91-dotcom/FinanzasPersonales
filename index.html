@@ -166,89 +166,95 @@
                     </div>
                 </div>
 
-                <div class="hidden md:flex flex-col h-full p-6 lg:p-8 w-full mx-auto gap-6 bg-gray-950 overflow-hidden">
+                <div class="hidden md:flex flex-col h-full p-4 lg:p-6 w-full mx-auto gap-4 bg-gray-950 overflow-hidden">
                     
-                    <div class="bg-gray-900/80 border border-gray-800 rounded-2xl p-1.5 flex gap-1 shadow-lg shrink-0 w-full max-w-5xl mx-auto backdrop-blur-sm">
+                    <div class="bg-gray-900/80 border border-gray-800 rounded-xl p-1 flex gap-1 shadow-sm shrink-0 w-full max-w-5xl mx-auto backdrop-blur-sm">
                         <button v-for="(m, i) in months" :key="i" @click="activeMonth = i" 
-                                class="flex-1 py-3 rounded-xl text-sm font-black tracking-wide transition-all duration-300"
-                                :class="activeMonth === i ? 'bg-primary-600 text-white shadow-lg shadow-primary-900/30 scale-105' : 'text-gray-500 hover:text-white hover:bg-gray-800'">
+                                class="flex-1 py-2 rounded-lg text-sm font-bold tracking-wide transition-all duration-200"
+                                :class="activeMonth === i ? 'bg-primary-600 text-white shadow-md shadow-primary-900/30' : 'text-gray-500 hover:text-white hover:bg-gray-800'">
                             {{ m }}
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0 w-full max-w-6xl mx-auto">
-                        <div class="bg-gradient-to-br from-gray-900 to-gray-900/80 border border-gray-800 rounded-3xl p-6 relative overflow-hidden group hover:border-gray-600 transition-colors cursor-pointer shadow-xl" @click="openBudgetModal(activeMonth)">
-                            <div class="absolute -top-4 -right-4 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i data-lucide="wallet" class="w-32 h-32 text-white"></i></div>
-                            <div class="flex items-center gap-2 mb-2">
-                                <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Ingreso del Mes</p>
-                                <i data-lucide="edit-3" class="w-3 h-3 text-gray-600 group-hover:text-primary-500 transition-colors"></i>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 shrink-0 w-full max-w-7xl mx-auto">
+                        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col justify-center relative group hover:border-gray-600 transition-colors cursor-pointer shadow-md" @click="openBudgetModal(activeMonth)">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ingreso del Mes</p>
+                                    <i data-lucide="edit-3" class="w-3 h-3 text-gray-600 group-hover:text-primary-500 transition-colors"></i>
+                                </div>
+                                <i data-lucide="wallet" class="w-4 h-4 text-gray-700"></i>
                             </div>
-                            <h3 class="text-4xl font-black text-white font-mono">{{ formatCurrency(getEffectiveIncome(activeMonth)) }}</h3>
+                            <h3 class="text-2xl md:text-3xl font-black text-white font-mono leading-none">{{ formatCurrency(getEffectiveIncome(activeMonth)) }}</h3>
                         </div>
 
-                        <div class="bg-gradient-to-br from-gray-900 to-gray-900/80 border border-gray-800 rounded-3xl p-6 relative overflow-hidden shadow-xl">
-                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Gasto {{ months[activeMonth] }}</p>
-                            <h3 class="text-4xl font-black text-white font-mono flex items-end gap-3">
-                                {{ formatCurrency(getMonthGrandTotal(activeMonth)) }}
-                                <span class="text-sm font-bold pb-1" :class="getBudgetStatusClass(activeMonth)">
+                        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col justify-center relative shadow-md">
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Gasto {{ months[activeMonth] }}</p>
+                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-950" :class="getBudgetStatusClass(activeMonth)">
                                     {{ Math.round((getMonthGrandTotal(activeMonth) / getBudgetLimit(activeMonth)) * 100) || 0 }}%
                                 </span>
+                            </div>
+                            <h3 class="text-2xl md:text-3xl font-black text-white font-mono leading-none">
+                                {{ formatCurrency(getMonthGrandTotal(activeMonth)) }}
                             </h3>
-                            <div class="mt-5 h-2 w-full bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                            <div class="mt-2.5 h-1.5 w-full bg-gray-950 rounded-full overflow-hidden border border-gray-800">
                                  <div class="h-full rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(16,185,129,0.5)]" :class="getBudgetBgClass(activeMonth)" :style="{ width: Math.min((getMonthGrandTotal(activeMonth) / getBudgetLimit(activeMonth)) * 100, 100) + '%' }"></div>
                             </div>
                         </div>
 
-                        <div class="bg-gradient-to-br from-gray-900 to-gray-900/80 border border-gray-800 rounded-3xl p-6 relative overflow-hidden shadow-xl">
-                             <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Dinero Disponible</p>
-                             <h3 class="text-4xl font-black font-mono" :class="getEffectiveIncome(activeMonth) - getMonthGrandTotal(activeMonth) < 0 ? 'text-red-500' : 'text-primary-400'">
+                        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col justify-center relative shadow-md">
+                             <div class="flex items-center justify-between mb-1">
+                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dinero Disponible</p>
+                                 <i data-lucide="pie-chart" class="w-4 h-4 text-gray-700"></i>
+                             </div>
+                             <h3 class="text-2xl md:text-3xl font-black font-mono leading-none" :class="getEffectiveIncome(activeMonth) - getMonthGrandTotal(activeMonth) < 0 ? 'text-red-500' : 'text-primary-400'">
                                  {{ formatCurrency(getEffectiveIncome(activeMonth) - getMonthGrandTotal(activeMonth)) }}
                              </h3>
-                             <p class="text-xs font-bold text-gray-600 mt-2">Diferencia entre ingreso y gastos.</p>
                         </div>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto pr-2 pb-20 mt-4 custom-scrollbar">
+                    <div class="flex-1 overflow-y-auto pr-2 pb-20 mt-2 custom-scrollbar">
                         <div v-if="sortedEntities.length === 0" class="flex flex-col items-center justify-center h-64 border-2 border-dashed border-gray-800 rounded-3xl">
                             <i data-lucide="layers" class="w-12 h-12 text-gray-700 mb-4"></i>
                             <p class="text-gray-500 font-bold">No hay cuentas creadas aún.</p>
                             <button @click="openEntitiesModal" class="mt-4 px-6 py-2 bg-primary-600 text-white rounded-xl font-bold">Crear Cuenta</button>
                         </div>
 
-                        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 items-start">
+                        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 items-start">
                             
                             <div v-for="ent in sortedEntities" :key="ent.id" class="bg-gray-900/60 border border-gray-800 rounded-3xl overflow-hidden shadow-lg hover:border-gray-700 hover:shadow-2xl transition-all flex flex-col max-h-[600px] backdrop-blur-sm">
                                 
-                                <div class="p-5 border-b border-gray-800/50 bg-gray-900 flex items-center justify-between sticky top-0 z-10">
+                                <div class="p-4 border-b border-gray-800/50 bg-gray-900 flex items-center justify-between sticky top-0 z-10">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-inner ring-1 ring-white/10" :class="ent.color">
+                                        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-inner ring-1 ring-white/10" :class="ent.color">
                                             {{ ent.name.substring(0,2).toUpperCase() }}
                                         </div>
-                                        <span class="font-bold text-white text-base">{{ ent.name }}</span>
+                                        <span class="font-bold text-white text-sm">{{ ent.name }}</span>
                                     </div>
                                     <div class="text-right flex flex-col items-end">
-                                        <span class="text-lg font-mono font-black text-gray-300">{{ formatCurrency(getMonthEntityTotal(ent.name, activeMonth)) }}</span>
-                                        <span class="text-[10px] text-gray-500 font-black uppercase tracking-wider bg-gray-950 px-2 py-0.5 rounded-md mt-1">{{ getItems(ent.name, activeMonth).length }} movs</span>
+                                        <span class="text-base font-mono font-black text-gray-300">{{ formatCurrency(getMonthEntityTotal(ent.name, activeMonth)) }}</span>
+                                        <span class="text-[9px] text-gray-500 font-black uppercase tracking-wider bg-gray-950 px-1.5 py-0.5 rounded-md mt-0.5">{{ getItems(ent.name, activeMonth).length }} movs</span>
                                     </div>
                                 </div>
                                 
-                                <div class="p-4 overflow-y-auto flex-1 space-y-2.5 custom-scrollbar bg-gray-950/20">
-                                    <div v-if="getItems(ent.name, activeMonth).length === 0" class="flex flex-col items-center justify-center py-10 opacity-50">
-                                        <i data-lucide="inbox" class="w-8 h-8 text-gray-600 mb-2"></i>
+                                <div class="p-3 overflow-y-auto flex-1 space-y-2 custom-scrollbar bg-gray-950/20">
+                                    <div v-if="getItems(ent.name, activeMonth).length === 0" class="flex flex-col items-center justify-center py-8 opacity-50">
+                                        <i data-lucide="inbox" class="w-6 h-6 text-gray-600 mb-2"></i>
                                         <span class="text-xs font-bold text-gray-500">Sin movimientos</span>
                                     </div>
                                     
-                                    <div v-else v-for="item in getItems(ent.name, activeMonth)" :key="item.id" @click="openEditModal(item)" class="bg-gray-900/80 hover:bg-gray-800 border border-gray-800/50 p-4 rounded-2xl cursor-pointer transition-all hover:border-primary-500/50 hover:shadow-[0_4px_20px_-5px_rgba(16,185,129,0.2)] group relative overflow-hidden">
+                                    <div v-else v-for="item in getItems(ent.name, activeMonth)" :key="item.id" @click="openEditModal(item)" class="bg-gray-900/80 hover:bg-gray-800 border border-gray-800/50 p-3 rounded-2xl cursor-pointer transition-all hover:border-primary-500/50 hover:shadow-[0_4px_20px_-5px_rgba(16,185,129,0.2)] group relative overflow-hidden">
                                         <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-primary-500 transition-colors"></div>
-                                        <div class="flex justify-between items-start mb-2 gap-2">
-                                            <span class="text-sm font-semibold text-gray-200 line-clamp-2 leading-tight">{{ item.name }}</span>
+                                        <div class="flex justify-between items-start mb-1.5 gap-2">
+                                            <span class="text-xs font-semibold text-gray-200 line-clamp-2 leading-tight">{{ item.name }}</span>
                                         </div>
-                                        <div class="flex justify-between items-end mt-1">
-                                            <span class="text-[10px] font-black text-gray-500 font-mono flex items-center gap-1.5 uppercase tracking-wider bg-gray-950 px-1.5 py-0.5 rounded">
-                                                <i :data-lucide="item.type === 'recurring' ? 'refresh-cw' : 'layers'" class="w-3 h-3"></i>
+                                        <div class="flex justify-between items-end">
+                                            <span class="text-[9px] font-black text-gray-500 font-mono flex items-center gap-1 uppercase tracking-wider bg-gray-950 px-1.5 py-0.5 rounded">
+                                                <i :data-lucide="item.type === 'recurring' ? 'refresh-cw' : 'layers'" class="w-2.5 h-2.5"></i>
                                                 {{ item.type === 'recurring' ? 'Fijo' : `${item.installment_index}/${item.total_installments}` }}
                                             </span>
-                                            <span class="text-base font-mono font-black text-primary-400">{{ formatCurrency(item.amount) }}</span>
+                                            <span class="text-sm font-mono font-black text-primary-400">{{ formatCurrency(item.amount) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -259,9 +265,9 @@
                 </div>
             </main>
 
-            <div class="fixed right-4 bottom-24 md:bottom-10 md:right-10 z-50">
-                <button @click="openExpenseModal" class="w-14 h-14 md:w-16 md:h-16 rounded-2xl md:rounded-[1.5rem] bg-primary-500 hover:bg-primary-400 text-white shadow-[0_10px_30px_-5px_rgba(16,185,129,0.5)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-white/20">
-                    <i data-lucide="plus" class="w-8 h-8 md:w-10 md:h-10"></i>
+            <div class="fixed right-4 bottom-24 md:bottom-8 md:right-8 z-50">
+                <button @click="openExpenseModal" class="w-14 h-14 md:w-14 md:h-14 rounded-2xl bg-primary-500 hover:bg-primary-400 text-white shadow-[0_10px_30px_-5px_rgba(16,185,129,0.5)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-white/20">
+                    <i data-lucide="plus" class="w-7 h-7"></i>
                 </button>
             </div>
 
