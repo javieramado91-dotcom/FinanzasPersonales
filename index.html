@@ -174,27 +174,73 @@
                     </div>
                 </div>
 
-                <div class="hidden md:flex flex-col h-full p-4 lg:p-8 w-full max-w-[1800px] mx-auto">
+                <div class="hidden md:flex flex-col h-full p-4 lg:p-8 w-full max-w-[1920px] mx-auto">
                     <div class="bg-gray-900 border border-gray-800 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] overflow-hidden flex-1 relative flex flex-col">
                         <div class="overflow-auto custom-scrollbar flex-1 relative bg-gray-950/30">
-                            <table class="w-full border-collapse min-w-[1200px]">
-                                <thead class="sticky-header shadow-md"><tr class="text-[10px] uppercase font-black text-gray-500 bg-gray-950 tracking-wider"><th class="p-4 text-left w-56 sticky-col border-b border-gray-800 z-20">Entidades</th><th v-for="(m, i) in months" :key="i" class="p-4 text-right border-b border-gray-800 min-w-[120px]" :class="{'bg-primary-950/10 text-primary-400': isCurrentMonth(i)}">{{ m }}</th><th class="p-4 text-right border-b border-gray-800 bg-gray-900 text-white w-32">Total</th></tr></thead>
-                                <tbody class="text-sm font-medium">
-                                    <tr v-if="sortedEntities.length === 0 && !loading"><td colspan="14" class="p-20 text-center text-gray-500">Agrega cuentas para comenzar</td></tr>
-                                    <tr v-for="ent in sortedEntities" :key="ent.id" class="group hover:bg-gray-900/30 transition-colors">
-                                        <td @click="toggleDesktopCollapse(ent.id)" class="p-3 sticky-col border-b border-gray-800 bg-gray-900/95 group-hover:bg-gray-800 transition-colors cursor-pointer border-r border-gray-800">
-                                            <div class="flex items-center gap-3"><button class="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-white transition"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': isDesktopCollapsed(ent.id)}"></i></button><div class="w-1.5 h-8 rounded-full" :class="ent.color"></div><span class="font-bold text-white text-sm">{{ ent.name }}</span></div>
-                                        </td>
-                                        <td v-for="(m, i) in months" :key="i" class="p-1.5 border-b border-gray-800 align-top" :class="{'bg-primary-900/5': isCurrentMonth(i)}">
-                                            <div v-if="!isDesktopCollapsed(ent.id)" class="flex flex-col gap-1 min-h-[40px]"><div v-for="item in getItems(ent.name, i)" :key="item.id" class="group/item relative bg-gray-900/60 hover:bg-gray-800 p-2.5 rounded-xl border border-gray-800 transition-all cursor-pointer shadow-sm flex flex-col justify-between h-full hover:border-gray-600" @click="openEditModal(item)"><div class="flex justify-between items-start gap-2 mb-1"><span class="text-[10px] font-semibold text-gray-200 truncate leading-tight w-full">{{ item.name }}</span></div><div class="flex justify-between items-end"><div class="flex items-center gap-1 text-[9px] text-gray-500 font-mono"><i :data-lucide="item.type === 'recurring' ? 'refresh-cw' : 'layers'" class="w-2.5 h-2.5"></i>{{ item.type === 'recurring' ? 'F' : `${item.installment_index}/${item.total_installments}` }}</div><span class="text-[10px] font-mono font-bold text-primary-400">{{ formatCurrency(item.amount) }}</span></div></div></div>
-                                            <div v-else class="h-10 flex items-center justify-end pr-2"><span v-if="getItems(ent.name, i).length > 0" class="font-mono font-bold text-gray-400 text-xs hover:text-white transition cursor-help" :title="getItems(ent.name, i).length + ' movimientos'">{{ formatCurrency(getItems(ent.name, i).reduce((sum, item) => sum + item.amount, 0)) }}</span><span v-else class="text-gray-800 text-xs font-mono">-</span></div>
-                                        </td>
-                                        <td class="p-4 text-right font-mono font-bold text-gray-400 border-b border-gray-800 bg-gray-900/30 text-xs">{{ formatCurrency(getYearEntityTotal(ent.name)) }}</td>
+                            <table class="w-full border-collapse min-w-[1600px]">
+                                <thead class="sticky-header shadow-md">
+                                    <tr class="text-[10px] uppercase font-black text-gray-500 bg-gray-950 tracking-wider">
+                                        <th class="p-4 text-left w-64 sticky-col border-b border-gray-800 z-20">Entidades</th>
+                                        <th v-for="(m, i) in months" :key="i" class="p-4 text-right border-b border-gray-800 min-w-[150px] transition-all" :class="isCurrentMonth(i) ? 'bg-primary-950/20 text-primary-400 border-t-2 border-t-primary-500 shadow-inner' : ''">
+                                            {{ m }}
+                                        </th>
+                                        <th class="p-4 text-right border-b border-gray-800 bg-gray-900 text-white w-36">Total</th>
                                     </tr>
-                                    <tr v-if="sortedEntities.length > 0" class="sticky bottom-0 z-40 bg-gray-900 border-t-2 border-gray-800 shadow-2xl">
-                                        <td class="p-4 sticky-col bg-gray-900 text-xs font-black uppercase text-gray-400 tracking-widest border-r border-gray-800"><div class="flex flex-col"><span>Total Mensual</span><span class="text-[9px] text-gray-600 normal-case mt-1 font-normal">(Click en monto para editar)</span></div></td>
-                                        <td v-for="(m, i) in months" :key="'tot-'+i" class="p-4 text-right font-mono font-bold text-sm border-r border-gray-800/50 relative overflow-hidden group cursor-pointer hover:bg-gray-800 transition-colors" @click="openBudgetModal(i)" :title="'Editar presupuesto de ' + m"><div v-if="getBudgetLimit(i) > 0" class="absolute inset-0 opacity-10 transition-colors duration-500" :class="getBudgetBgClass(i)"></div><div class="relative z-10 flex flex-col items-end"><span>{{ formatCurrency(getMonthGrandTotal(i)) }}</span><div v-if="getBudgetLimit(i) > 0" class="h-1 w-full bg-gray-800 mt-2 rounded-full overflow-hidden"><div class="h-full rounded-full transition-all duration-500" :class="getBudgetBgClass(i)" :style="{ width: Math.min((getMonthGrandTotal(i) / getBudgetLimit(i)) * 100, 100) + '%' }"></div></div></div></td>
-                                        <td class="p-4 text-right text-base text-white font-mono bg-gray-850 border-t border-gray-700">{{ formatCurrency(getYearGrandTotal()) }}</td>
+                                </thead>
+                                <tbody class="text-sm font-medium">
+                                    <tr v-if="sortedEntities.length === 0 && !loading">
+                                        <td colspan="14" class="p-20 text-center text-gray-500">Agrega cuentas para comenzar</td>
+                                    </tr>
+                                    <tr v-for="ent in sortedEntities" :key="ent.id" class="group hover:bg-gray-900/40 transition-colors">
+                                        <td @click="toggleDesktopCollapse(ent.id)" class="p-4 sticky-col border-b border-gray-800 bg-gray-900/95 group-hover:bg-gray-850 transition-colors cursor-pointer border-r-2 border-gray-700 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.4)] z-10">
+                                            <div class="flex items-center gap-3">
+                                                <button class="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-white transition">
+                                                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': isDesktopCollapsed(ent.id)}"></i>
+                                                </button>
+                                                <div class="w-1.5 h-8 rounded-full" :class="ent.color"></div>
+                                                <span class="font-bold text-white text-sm">{{ ent.name }}</span>
+                                            </div>
+                                        </td>
+                                        
+                                        <td v-for="(m, i) in months" :key="i" class="p-2 border-b border-gray-800 align-top transition-colors" :class="isCurrentMonth(i) ? 'bg-primary-900/5 ring-1 ring-inset ring-primary-500/10' : (i < new Date().getMonth() && currentYear === new Date().getFullYear() ? 'opacity-70 hover:opacity-100' : '')">
+                                            <div v-if="!isDesktopCollapsed(ent.id)" class="flex flex-col gap-2 min-h-[50px]">
+                                                <div v-for="item in getItems(ent.name, i)" :key="item.id" class="group/item relative bg-gray-900/80 hover:bg-gray-800 p-3.5 rounded-xl border border-gray-700 transition-all cursor-pointer shadow-md flex flex-col justify-between h-full hover:border-primary-500 hover:shadow-primary-500/10" @click="openEditModal(item)">
+                                                    <div class="flex justify-between items-start gap-2 mb-3">
+                                                        <span class="text-xs font-semibold text-gray-100 leading-tight w-full line-clamp-2" :title="item.name">{{ item.name }}</span>
+                                                    </div>
+                                                    <div class="flex justify-between items-end">
+                                                        <div class="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
+                                                            <i :data-lucide="item.type === 'recurring' ? 'refresh-cw' : 'layers'" class="w-3 h-3"></i>
+                                                            {{ item.type === 'recurring' ? 'Fijo' : `${item.installment_index}/${item.total_installments}` }}
+                                                        </div>
+                                                        <span class="text-sm font-mono font-black text-primary-400">{{ formatCurrency(item.amount) }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-else class="h-12 flex items-center justify-end pr-2">
+                                                <span v-if="getItems(ent.name, i).length > 0" class="font-mono font-bold text-gray-400 text-sm hover:text-white transition cursor-help" :title="getItems(ent.name, i).length + ' movimientos'">{{ formatCurrency(getItems(ent.name, i).reduce((sum, item) => sum + item.amount, 0)) }}</span>
+                                                <span v-else class="text-gray-800 text-sm font-mono">-</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-right font-mono font-bold text-gray-400 border-b border-gray-800 bg-gray-900/30 text-sm">{{ formatCurrency(getYearEntityTotal(ent.name)) }}</td>
+                                    </tr>
+                                    <tr v-if="sortedEntities.length > 0" class="sticky bottom-0 z-40 bg-gray-900 border-t-2 border-gray-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+                                        <td class="p-5 sticky-col bg-gray-900 text-xs font-black uppercase text-gray-400 tracking-widest border-r-2 border-gray-700 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.4)]">
+                                            <div class="flex flex-col">
+                                                <span>Total Mensual</span>
+                                                <span class="text-[9px] text-gray-600 normal-case mt-1 font-normal">(Click en monto para editar)</span>
+                                            </div>
+                                        </td>
+                                        <td v-for="(m, i) in months" :key="'tot-'+i" class="p-4 text-right font-mono font-bold text-sm border-r border-gray-800/50 relative overflow-hidden group cursor-pointer hover:bg-gray-800 transition-colors" @click="openBudgetModal(i)" :title="'Editar presupuesto de ' + m">
+                                            <div v-if="getBudgetLimit(i) > 0" class="absolute inset-0 opacity-10 transition-colors duration-500" :class="getBudgetBgClass(i)"></div>
+                                            <div class="relative z-10 flex flex-col items-end">
+                                                <span class="text-base" :class="isCurrentMonth(i) ? 'text-primary-400' : 'text-gray-300'">{{ formatCurrency(getMonthGrandTotal(i)) }}</span>
+                                                <div v-if="getBudgetLimit(i) > 0" class="h-1.5 w-full bg-gray-800 mt-2 rounded-full overflow-hidden">
+                                                    <div class="h-full rounded-full transition-all duration-500" :class="getBudgetBgClass(i)" :style="{ width: Math.min((getMonthGrandTotal(i) / getBudgetLimit(i)) * 100, 100) + '%' }"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-right text-lg text-white font-mono bg-gray-850 border-t border-gray-700">{{ formatCurrency(getYearGrandTotal()) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
