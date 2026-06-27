@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#030712">
-    <title>Finanzas Control App</title>
-    
+    <meta name="theme-color" content="#030712" id="metaThemeColor">
+    <title>FinanzasApp</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2334d399'/%3E%3Cstop offset='100%25' stop-color='%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23g)'/%3E%3Ctext x='50' y='70' font-size='58' font-weight='900' text-anchor='middle' fill='white' font-family='system-ui'%3E$%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2310b981'/%3E%3Ctext x='50' y='70' font-size='58' font-weight='900' text-anchor='middle' fill='white' font-family='system-ui'%3E$%3C/text%3E%3C/svg%3E">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -28,31 +30,172 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; transition: background-color 0.4s, color 0.4s; }
+        * { transition-property: background-color, border-color, color, fill, stroke, box-shadow; transition-duration: 0.3s; transition-timing-function: ease; }
+        *:focus, *:active, input, select, button { transition-duration: 0s; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-        
+        ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--scroll-hover); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         .safe-top { padding-top: env(safe-area-inset-top); }
-        .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .glass-nav { background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255, 255, 255, 0.05); }
-        
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); }
+        .glass-nav { background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px -5px var(--fab-glow); } 50% { box-shadow: 0 0 35px -2px var(--fab-glow); } }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-fade { animation: fadeIn 0.2s ease-out forwards; }
-        
-        /* Gráficos */
         .bar-container { display: flex; align-items: flex-end; gap: 4px; height: 100%; }
-        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; group: 1; position: relative; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative; }
         .bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s ease-out; min-height: 4px; }
+        .fab-center { animation: pulse-glow 3s ease-in-out infinite; }
+        .theme-btn { position: relative; overflow: hidden; }
+        .theme-btn::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, var(--accent-glow) 0%, transparent 70%); opacity: 0; transition: opacity 0.3s; }
+        .theme-btn:hover::after { opacity: 0.15; }
+        .tip-card { border-left: 3px solid var(--tip-color); }
+
+        /* === THEME: DARK (default) === */
+        [data-theme="dark"] {
+            --scroll-thumb: #374151; --scroll-hover: #4b5563;
+            --glass-bg: rgba(17, 24, 39, 0.75); --glass-border: rgba(255,255,255,0.08);
+            --nav-bg: rgba(3, 7, 18, 0.88); --fab-glow: rgba(16,185,129,0.5);
+            --accent-glow: rgba(16,185,129,0.4); --theme-color: #030712;
+        }
+
+        /* === THEME: SUNSET === */
+        [data-theme="sunset"] {
+            --scroll-thumb: #5a3580; --scroll-hover: #7a45a0;
+            --glass-bg: rgba(30, 15, 55, 0.8); --glass-border: rgba(255,180,100,0.12);
+            --nav-bg: rgba(15, 5, 30, 0.9); --fab-glow: rgba(251,146,60,0.5);
+            --accent-glow: rgba(251,146,60,0.4); --theme-color: #0f0520;
+        }
+        [data-theme="sunset"] body { background-color: #0f0520 !important; }
+        [data-theme="sunset"] .bg-gray-950 { background-color: #0f0520 !important; }
+        [data-theme="sunset"] .bg-gray-925 { background-color: #1a0a2e !important; }
+        [data-theme="sunset"] .bg-gray-900 { background-color: #1e0f3d !important; }
+        [data-theme="sunset"] .bg-gray-900\/50 { background-color: rgba(30,15,61,0.5) !important; }
+        [data-theme="sunset"] .bg-gray-900\/60 { background-color: rgba(30,15,61,0.6) !important; }
+        [data-theme="sunset"] .bg-gray-900\/80 { background-color: rgba(30,15,61,0.8) !important; }
+        [data-theme="sunset"] .bg-gray-800 { background-color: #2d1b50 !important; }
+        [data-theme="sunset"] .bg-gray-800\/50 { background-color: rgba(45,27,80,0.5) !important; }
+        [data-theme="sunset"] .bg-gray-700 { background-color: #3d2565 !important; }
+        [data-theme="sunset"] .bg-gray-950\/50 { background-color: rgba(15,5,32,0.5) !important; }
+        [data-theme="sunset"] .bg-gray-950\/90 { background-color: rgba(15,5,32,0.9) !important; }
+        [data-theme="sunset"] .bg-gray-950\/20 { background-color: rgba(15,5,32,0.2) !important; }
+        [data-theme="sunset"] .hover\:bg-gray-800:hover { background-color: #3d2565 !important; }
+        [data-theme="sunset"] .hover\:bg-gray-700:hover { background-color: #4d3575 !important; }
+        [data-theme="sunset"] .border-gray-800 { border-color: #2d1b50 !important; }
+        [data-theme="sunset"] .border-gray-800\/50 { border-color: rgba(45,27,80,0.5) !important; }
+        [data-theme="sunset"] .border-gray-700 { border-color: #3d2565 !important; }
+        [data-theme="sunset"] .border-gray-700\/50 { border-color: rgba(61,37,101,0.5) !important; }
+        [data-theme="sunset"] .hover\:border-gray-600:hover { border-color: #5a3580 !important; }
+        [data-theme="sunset"] .hover\:border-gray-700:hover { border-color: #4d3575 !important; }
+        [data-theme="sunset"] .text-white { color: #fff5e6 !important; }
+        [data-theme="sunset"] .text-gray-100 { color: #fde8d0 !important; }
+        [data-theme="sunset"] .text-gray-200 { color: #f0d5b0 !important; }
+        [data-theme="sunset"] .text-gray-300 { color: #e0c090 !important; }
+        [data-theme="sunset"] .text-gray-400 { color: #c4a070 !important; }
+        [data-theme="sunset"] .text-gray-500 { color: #9a7d5a !important; }
+        [data-theme="sunset"] .text-gray-600 { color: #7a5d40 !important; }
+        [data-theme="sunset"] .text-gray-700 { color: #5a3d30 !important; }
+        [data-theme="sunset"] .text-primary-400 { color: #fbbf24 !important; }
+        [data-theme="sunset"] .text-primary-500 { color: #f59e0b !important; }
+        [data-theme="sunset"] .bg-primary-500 { background-color: #f59e0b !important; }
+        [data-theme="sunset"] .bg-primary-600 { background-color: #d97706 !important; }
+        [data-theme="sunset"] .bg-primary-500\/10 { background-color: rgba(245,158,11,0.1) !important; }
+        [data-theme="sunset"] .bg-primary-500\/5 { background-color: rgba(245,158,11,0.05) !important; }
+        [data-theme="sunset"] .hover\:bg-primary-400:hover { background-color: #fbbf24 !important; }
+        [data-theme="sunset"] .hover\:bg-primary-500:hover { background-color: #f59e0b !important; }
+        [data-theme="sunset"] .border-primary-500 { border-color: #f59e0b !important; }
+        [data-theme="sunset"] .ring-primary-500\/30 { --tw-ring-color: rgba(245,158,11,0.3) !important; }
+        [data-theme="sunset"] .focus\:border-primary-500:focus { border-color: #f59e0b !important; }
+        [data-theme="sunset"] .focus\:ring-primary-500:focus { --tw-ring-color: rgba(245,158,11,0.5) !important; }
+        [data-theme="sunset"] .shadow-primary-900\/20 { --tw-shadow-color: rgba(120,53,0,0.2) !important; }
+        [data-theme="sunset"] .shadow-primary-900\/50 { --tw-shadow-color: rgba(120,53,0,0.5) !important; }
+        [data-theme="sunset"] .shadow-primary-900\/30 { --tw-shadow-color: rgba(120,53,0,0.3) !important; }
+        [data-theme="sunset"] .ring-gray-800 { --tw-ring-color: #2d1b50 !important; }
+        [data-theme="sunset"] .ring-gray-700\/50 { --tw-ring-color: rgba(61,37,101,0.5) !important; }
+        [data-theme="sunset"] .accent-primary-500 { accent-color: #f59e0b !important; }
+        [data-theme="sunset"] .selection\:bg-primary-500 ::selection { background-color: #f59e0b !important; }
+        [data-theme="sunset"] .from-gray-900 { --tw-gradient-from: #1e0f3d !important; }
+        [data-theme="sunset"] .to-gray-925 { --tw-gradient-to: #150830 !important; }
+        [data-theme="sunset"] .from-gray-700 { --tw-gradient-from: #3d2565 !important; }
+        [data-theme="sunset"] .to-gray-800 { --tw-gradient-to: #2d1b50 !important; }
+        [data-theme="sunset"] .placeholder\:text-gray-600::placeholder { color: #5a3d40 !important; }
+        [data-theme="sunset"] .placeholder\:text-gray-700::placeholder { color: #4a2d35 !important; }
+
+        /* === THEME: LIGHT === */
+        [data-theme="light"] {
+            --scroll-thumb: #cbd5e1; --scroll-hover: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.85); --glass-border: rgba(0,0,0,0.08);
+            --nav-bg: rgba(255, 255, 255, 0.92); --fab-glow: rgba(5,150,105,0.4);
+            --accent-glow: rgba(5,150,105,0.3); --theme-color: #f8fafc;
+        }
+        [data-theme="light"] body { background-color: #f1f5f9 !important; color: #0f172a !important; }
+        [data-theme="light"] .bg-gray-950 { background-color: #f1f5f9 !important; }
+        [data-theme="light"] .bg-gray-925 { background-color: #f1f5f9 !important; }
+        [data-theme="light"] .bg-gray-900 { background-color: #ffffff !important; }
+        [data-theme="light"] .bg-gray-900\/50 { background-color: rgba(255,255,255,0.5) !important; }
+        [data-theme="light"] .bg-gray-900\/60 { background-color: rgba(255,255,255,0.6) !important; }
+        [data-theme="light"] .bg-gray-900\/80 { background-color: rgba(255,255,255,0.8) !important; }
+        [data-theme="light"] .bg-gray-800 { background-color: #e2e8f0 !important; }
+        [data-theme="light"] .bg-gray-800\/50 { background-color: rgba(226,232,240,0.5) !important; }
+        [data-theme="light"] .bg-gray-700 { background-color: #cbd5e1 !important; }
+        [data-theme="light"] .bg-gray-950\/50 { background-color: rgba(241,245,249,0.5) !important; }
+        [data-theme="light"] .bg-gray-950\/90 { background-color: rgba(241,245,249,0.95) !important; }
+        [data-theme="light"] .bg-gray-950\/20 { background-color: rgba(241,245,249,0.2) !important; }
+        [data-theme="light"] .bg-gray-950\/80 { background-color: rgba(241,245,249,0.8) !important; }
+        [data-theme="light"] .hover\:bg-gray-800:hover { background-color: #e2e8f0 !important; }
+        [data-theme="light"] .hover\:bg-gray-800\/50:hover { background-color: rgba(226,232,240,0.5) !important; }
+        [data-theme="light"] .hover\:bg-gray-700:hover { background-color: #cbd5e1 !important; }
+        [data-theme="light"] .border-gray-800 { border-color: #e2e8f0 !important; }
+        [data-theme="light"] .border-gray-800\/50 { border-color: rgba(226,232,240,0.5) !important; }
+        [data-theme="light"] .border-gray-700 { border-color: #cbd5e1 !important; }
+        [data-theme="light"] .border-gray-700\/50 { border-color: rgba(203,213,225,0.5) !important; }
+        [data-theme="light"] .hover\:border-gray-600:hover { border-color: #94a3b8 !important; }
+        [data-theme="light"] .hover\:border-gray-700:hover { border-color: #cbd5e1 !important; }
+        [data-theme="light"] .text-white { color: #0f172a !important; }
+        [data-theme="light"] .text-gray-100 { color: #1e293b !important; }
+        [data-theme="light"] .text-gray-200 { color: #334155 !important; }
+        [data-theme="light"] .text-gray-300 { color: #475569 !important; }
+        [data-theme="light"] .text-gray-400 { color: #64748b !important; }
+        [data-theme="light"] .text-gray-500 { color: #64748b !important; }
+        [data-theme="light"] .text-gray-600 { color: #94a3b8 !important; }
+        [data-theme="light"] .text-gray-700 { color: #cbd5e1 !important; }
+        [data-theme="light"] .ring-gray-800 { --tw-ring-color: #e2e8f0 !important; }
+        [data-theme="light"] .ring-gray-700\/50 { --tw-ring-color: rgba(203,213,225,0.5) !important; }
+        [data-theme="light"] .from-gray-900 { --tw-gradient-from: #ffffff !important; }
+        [data-theme="light"] .to-gray-925 { --tw-gradient-to: #f8fafc !important; }
+        [data-theme="light"] .from-gray-700 { --tw-gradient-from: #e2e8f0 !important; }
+        [data-theme="light"] .to-gray-800 { --tw-gradient-to: #e2e8f0 !important; }
+        [data-theme="light"] .text-primary-400 { color: #059669 !important; }
+        [data-theme="light"] .text-primary-500 { color: #047857 !important; }
+        [data-theme="light"] .bg-primary-500 { background-color: #059669 !important; }
+        [data-theme="light"] .bg-primary-600 { background-color: #047857 !important; }
+        [data-theme="light"] .bg-primary-500\/10 { background-color: rgba(5,150,105,0.1) !important; }
+        [data-theme="light"] .bg-primary-500\/5 { background-color: rgba(5,150,105,0.05) !important; }
+        [data-theme="light"] .hover\:bg-primary-400:hover { background-color: #10b981 !important; }
+        [data-theme="light"] .hover\:bg-primary-500:hover { background-color: #059669 !important; }
+        [data-theme="light"] .border-primary-500 { border-color: #059669 !important; }
+        [data-theme="light"] .focus\:border-primary-500:focus { border-color: #059669 !important; }
+        [data-theme="light"] .shadow-primary-900\/20 { --tw-shadow-color: rgba(4,120,87,0.15) !important; }
+        [data-theme="light"] .shadow-primary-900\/50 { --tw-shadow-color: rgba(4,120,87,0.3) !important; }
+        [data-theme="light"] .placeholder\:text-gray-600::placeholder { color: #94a3b8 !important; }
+        [data-theme="light"] .placeholder\:text-gray-700::placeholder { color: #cbd5e1 !important; }
+        [data-theme="light"] .text-red-400 { color: #dc2626 !important; }
+        [data-theme="light"] .text-red-500 { color: #b91c1c !important; }
+        [data-theme="light"] .bg-red-500\/10 { background-color: rgba(220,38,38,0.08) !important; }
+        [data-theme="light"] .text-blue-400 { color: #2563eb !important; }
+        [data-theme="light"] .bg-blue-500\/10 { background-color: rgba(37,99,235,0.08) !important; }
+        [data-theme="light"] .text-yellow-400 { color: #d97706 !important; }
+        [data-theme="light"] .text-yellow-500 { color: #b45309 !important; }
+        [data-theme="light"] .bg-yellow-500\/10 { background-color: rgba(217,119,6,0.08) !important; }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 h-[100dvh] flex flex-col overflow-hidden selection:bg-primary-500 selection:text-white">
+<body class="bg-gray-950 text-gray-100 h-[100dvh] flex flex-col overflow-hidden selection:bg-primary-500 selection:text-white" data-theme="dark">
 
     <div id="app" class="flex flex-col h-full relative w-full mx-auto" v-cloak>
 
@@ -129,11 +272,13 @@
                     <div class="flex items-center bg-gray-900 rounded-full border border-gray-800 p-1 shadow-inner">
                         <button @click="changeYear(-1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button><span class="font-mono font-bold text-primary-500 text-sm px-4">{{ currentYear }}</span><button @click="changeYear(1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                     </div>
-                    <div class="hidden md:flex items-center gap-3">
-                         <button @click="openStatsModal" class="h-10 px-5 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-primary-500"></i> Análisis</button>
-                         <button @click="openGlobalBudgetModal" class="h-10 px-5 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Config.</button>
-                         <button @click="openEntitiesModal" class="h-10 px-5 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> Cuentas</button>
-                         <button @click="logout" class="h-10 w-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition ml-2"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+                    <div class="hidden md:flex items-center gap-2">
+                         <button @click="cycleTheme" class="theme-btn h-10 w-10 flex items-center justify-center bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl transition" :title="'Tema: ' + themeLabels[currentTheme]"><i :data-lucide="themeIcons[currentTheme]" class="w-4 h-4 text-primary-500"></i></button>
+                         <button @click="openFinanceModal" class="h-10 px-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4 text-primary-500"></i> Finanzas</button>
+                         <button @click="openStatsModal" class="h-10 px-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4 text-primary-500"></i> Analisis</button>
+                         <button @click="openGlobalBudgetModal" class="h-10 px-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Config.</button>
+                         <button @click="openEntitiesModal" class="h-10 px-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> Cuentas</button>
+                         <button @click="logout" class="h-10 w-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition ml-1"><i data-lucide="log-out" class="w-4 h-4"></i></button>
                     </div>
                 </div>
                 <div class="md:hidden border-t border-gray-800/50 overflow-x-auto hide-scrollbar py-2 px-4 flex gap-2 snap-x">
@@ -265,18 +410,28 @@
                 </div>
             </main>
 
-            <div class="fixed right-4 bottom-24 md:bottom-8 md:right-8 z-50">
-                <button @click="openExpenseModal" class="w-14 h-14 md:w-14 md:h-14 rounded-2xl bg-primary-500 hover:bg-primary-400 text-white shadow-[0_10px_30px_-5px_rgba(16,185,129,0.5)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-white/20">
+            <!-- Desktop FAB -->
+            <div class="hidden md:block fixed right-8 bottom-8 z-50">
+                <button @click="openExpenseModal" class="w-14 h-14 rounded-2xl bg-primary-500 hover:bg-primary-400 text-white shadow-[0_10px_30px_-5px_rgba(16,185,129,0.5)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-white/20">
                     <i data-lucide="plus" class="w-7 h-7"></i>
                 </button>
             </div>
 
-            <nav class="md:hidden fixed bottom-0 left-0 right-0 glass-nav safe-bottom z-50 flex justify-around items-center h-20 px-2">
-                <button @click="activeView='home'" class="flex flex-col items-center justify-center w-14 gap-1 text-primary-400"><i data-lucide="home" class="w-5 h-5"></i><span class="text-[9px] font-bold">Inicio</span></button>
-                <button @click="openEntitiesModal" class="flex flex-col items-center justify-center w-14 gap-1 text-gray-500 active:text-gray-300"><i data-lucide="credit-card" class="w-5 h-5"></i><span class="text-[9px] font-bold">Cuentas</span></button>
-                <div class="w-8"></div>
-                <button @click="openStatsModal" class="flex flex-col items-center justify-center w-14 gap-1 text-gray-500 active:text-gray-300"><i data-lucide="bar-chart-3" class="w-5 h-5"></i><span class="text-[9px] font-bold">Análisis</span></button>
-                <button @click="openGlobalBudgetModal" class="flex flex-col items-center justify-center w-14 gap-1 text-gray-500 active:text-gray-300"><i data-lucide="settings-2" class="w-5 h-5"></i><span class="text-[9px] font-bold">Config</span></button>
+            <!-- Mobile Bottom Nav -->
+            <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50">
+                <!-- FAB centrado -->
+                <div class="absolute left-1/2 -translate-x-1/2 -top-6 z-10">
+                    <button @click="openExpenseModal" class="fab-center w-[60px] h-[60px] rounded-full bg-primary-500 hover:bg-primary-400 flex items-center justify-center active:scale-90 transition-transform border-4 shadow-[0_8px_25px_-4px_rgba(16,185,129,0.6)]" :class="currentTheme === 'light' ? 'border-gray-100 text-gray-100' : 'border-gray-950 text-white'" style="color: white !important;">
+                        <i data-lucide="plus" class="w-7 h-7"></i>
+                    </button>
+                </div>
+                <div class="glass-nav safe-bottom flex justify-around items-center h-[72px] px-2 pt-1">
+                    <button @click="activeView='home'" class="flex flex-col items-center justify-center w-14 gap-0.5 transition-colors" :class="activeView==='home' ? 'text-primary-500' : 'text-gray-500 active:text-gray-300'"><i data-lucide="home" class="w-5 h-5"></i><span class="text-[9px] font-bold">Inicio</span></button>
+                    <button @click="openFinanceModal" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i data-lucide="trending-up" class="w-5 h-5"></i><span class="text-[9px] font-bold">Finanzas</span></button>
+                    <div class="w-16"></div>
+                    <button @click="openStatsModal" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i data-lucide="bar-chart-3" class="w-5 h-5"></i><span class="text-[9px] font-bold">Analisis</span></button>
+                    <button @click="cycleTheme" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i :data-lucide="themeIcons[currentTheme]" class="w-5 h-5"></i><span class="text-[9px] font-bold">{{ themeLabels[currentTheme] }}</span></button>
+                </div>
             </nav>
 
         </template>
@@ -337,6 +492,126 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Smart Tips Section -->
+                    <div class="mt-8 bg-gray-900 p-6 rounded-3xl border border-gray-800">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i data-lucide="lightbulb" class="w-4 h-4 text-primary-500"></i> Consejos Inteligentes</h3>
+                        <div class="space-y-3">
+                            <div v-for="(tip, idx) in smartTips" :key="idx" class="tip-card p-4 bg-gray-950/50 rounded-xl" :style="{ '--tip-color': tip.hex }">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" :style="{ backgroundColor: tip.hex + '15' }">
+                                        <i :data-lucide="tip.icon" class="w-4 h-4" :style="{ color: tip.hex }"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-200 mb-0.5">{{ tip.title }}</p>
+                                        <p class="text-xs text-gray-400 leading-relaxed">{{ tip.text }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANCE MODAL -->
+        <div v-if="modals.finance" class="fixed inset-0 z-[100] bg-gray-950 md:bg-black/90 md:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade">
+            <div class="bg-gray-950 md:bg-gray-900 w-full h-full md:h-auto md:max-w-4xl md:rounded-3xl border-none md:border border-gray-800 flex flex-col overflow-hidden shadow-2xl md:max-h-[90vh]">
+                <div class="p-5 border-b border-gray-800 flex justify-between items-center safe-top bg-gray-950 md:bg-gray-900 shrink-0">
+                    <h2 class="text-xl font-black text-white flex items-center gap-3"><i data-lucide="trending-up" class="w-6 h-6 text-primary-500"></i> Salud Financiera {{ currentYear }}</h2>
+                    <button @click="modals.finance=false" class="p-2 bg-gray-800/50 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl border border-gray-700 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-5 md:p-6 space-y-5 bg-gray-950 md:bg-gray-900/50">
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                            <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center mb-2"><i data-lucide="arrow-down-circle" class="w-4 h-4 text-blue-400"></i></div>
+                            <p class="text-[9px] uppercase font-black text-gray-500 tracking-widest mb-1">Ingresos</p>
+                            <p class="text-base md:text-xl font-black text-white font-mono leading-tight">{{ formatCurrency(financeStats.totalIncome) }}</p>
+                        </div>
+                        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                            <div class="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center mb-2"><i data-lucide="arrow-up-circle" class="w-4 h-4 text-red-400"></i></div>
+                            <p class="text-[9px] uppercase font-black text-gray-500 tracking-widest mb-1">Gastos</p>
+                            <p class="text-base md:text-xl font-black text-red-400 font-mono leading-tight">{{ formatCurrency(financeStats.totalExpense) }}</p>
+                        </div>
+                        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center mb-2" :class="financeStats.totalSavings >= 0 ? 'bg-primary-500/10' : 'bg-red-500/10'"><i data-lucide="piggy-bank" class="w-4 h-4" :class="financeStats.totalSavings >= 0 ? 'text-primary-400' : 'text-red-400'"></i></div>
+                            <p class="text-[9px] uppercase font-black text-gray-500 tracking-widest mb-1">Ahorro</p>
+                            <p class="text-base md:text-xl font-black font-mono leading-tight" :class="financeStats.totalSavings >= 0 ? 'text-primary-400' : 'text-red-400'">{{ formatCurrency(financeStats.totalSavings) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-900 border border-gray-800 rounded-3xl p-6 flex flex-col items-center justify-center gap-4">
+                            <p class="text-[10px] uppercase font-black text-gray-500 tracking-widest">Tasa de Ahorro Anual</p>
+                            <div class="relative w-36 h-36">
+                                <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+                                    <circle cx="60" cy="60" r="52" fill="none" stroke="#111827" stroke-width="14"/>
+                                    <circle cx="60" cy="60" r="52" fill="none"
+                                        :stroke="financeStats.avgSavingsRate >= 20 ? '#10b981' : financeStats.avgSavingsRate >= 0 ? '#f59e0b' : '#ef4444'"
+                                        stroke-width="14" stroke-linecap="round"
+                                        :stroke-dasharray="`${Math.max(0, Math.min(financeStats.avgSavingsRate, 100)) * 3.267} 326.7`"
+                                        style="transition: stroke-dasharray 0.7s ease-out"/>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-3xl font-black text-white font-mono">{{ financeStats.avgSavingsRate }}%</span>
+                                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">ahorro</span>
+                                </div>
+                            </div>
+                            <div class="px-4 py-2 rounded-xl font-bold text-sm text-center"
+                                 :class="financeStats.avgSavingsRate >= 20 ? 'bg-primary-500/10 text-primary-400' : financeStats.avgSavingsRate >= 0 ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'">
+                                {{ financeStats.avgSavingsRate >= 30 ? 'Excelente' : financeStats.avgSavingsRate >= 20 ? 'Muy bien' : financeStats.avgSavingsRate >= 10 ? 'Regular' : financeStats.avgSavingsRate >= 0 ? 'Bajo ahorro' : 'En deficit' }}
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-900 border border-gray-800 rounded-3xl p-6">
+                            <p class="text-[10px] uppercase font-black text-gray-500 tracking-widest mb-4">Ahorro por Mes</p>
+                            <div class="space-y-2.5">
+                                <div v-for="m in financeStats.monthData" :key="m.i" class="flex items-center gap-3">
+                                    <span class="text-[10px] font-bold text-gray-500 w-6 shrink-0">{{ m.name }}</span>
+                                    <div class="flex-1 h-4 bg-gray-950 rounded-full overflow-hidden border border-gray-800">
+                                        <div class="h-full rounded-full transition-all duration-500"
+                                             :class="m.savings >= 0 ? 'bg-gradient-to-r from-primary-600 to-primary-400' : 'bg-gradient-to-r from-red-700 to-red-500'"
+                                             :style="{ width: m.income > 0 ? Math.min(Math.abs(m.savings) / m.income * 100, 100) + '%' : (m.expense > 0 ? '100%' : '0%') }">
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] font-mono font-black w-9 text-right shrink-0"
+                                          :class="m.savings >= 0 ? 'text-primary-400' : 'text-red-400'">
+                                        {{ m.rate }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-900 border border-gray-800 rounded-3xl p-5 md:p-6">
+                        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-5">Detalle Mensual</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="text-[9px] font-black text-gray-600 uppercase tracking-wider border-b border-gray-800">
+                                        <th class="text-left pb-3 pr-4">Mes</th>
+                                        <th class="text-right pb-3 pr-4">Ingreso</th>
+                                        <th class="text-right pb-3 pr-4">Gasto</th>
+                                        <th class="text-right pb-3 pr-4">Ahorro</th>
+                                        <th class="text-right pb-3">Balance Acum.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="m in financeStats.monthData" :key="m.i"
+                                        class="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors"
+                                        :class="{ 'opacity-30': m.income === 0 && m.expense === 0 }">
+                                        <td class="py-3 pr-4 text-sm font-bold text-gray-300">{{ m.name }}</td>
+                                        <td class="py-3 pr-4 text-right text-xs font-mono text-gray-400">{{ formatCurrency(m.income) }}</td>
+                                        <td class="py-3 pr-4 text-right text-xs font-mono text-red-400">{{ formatCurrency(m.expense) }}</td>
+                                        <td class="py-3 pr-4 text-right text-xs font-mono font-bold" :class="m.savings >= 0 ? 'text-primary-400' : 'text-red-400'">{{ formatCurrency(m.savings) }}</td>
+                                        <td class="py-3 text-right text-xs font-mono font-black" :class="m.running >= 0 ? 'text-white' : 'text-red-400'">{{ formatCurrency(m.running) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -365,16 +640,29 @@
                 const availableColors = ['bg-slate-600', 'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-600', 'bg-blue-600', 'bg-indigo-500', 'bg-violet-600', 'bg-purple-600', 'bg-pink-600', 'bg-rose-500'];
                 
                 const currentYear = ref(new Date().getFullYear());
-                const activeMonth = ref(new Date().getMonth()); 
+                const activeMonth = ref(new Date().getMonth());
                 const activeView = ref('home');
                 const expandedEntity = ref(null);
                 const desktopCollapsed = ref({});
+
+                const themes = ['dark', 'sunset', 'light'];
+                const themeLabels = { dark: 'Oscuro', sunset: 'Atardecer', light: 'Dia' };
+                const themeIcons = { dark: 'moon', sunset: 'sunset', light: 'sun' };
+                const currentTheme = ref(localStorage.getItem('finanzas-theme') || 'dark');
+                const cycleTheme = () => {
+                    const idx = themes.indexOf(currentTheme.value);
+                    currentTheme.value = themes[(idx + 1) % themes.length];
+                    localStorage.setItem('finanzas-theme', currentTheme.value);
+                    document.body.setAttribute('data-theme', currentTheme.value);
+                    document.getElementById('metaThemeColor')?.setAttribute('content',
+                        currentTheme.value === 'light' ? '#f1f5f9' : currentTheme.value === 'sunset' ? '#0f0520' : '#030712');
+                };
 
                 const transactions = ref([]);
                 const entities = ref([]);
                 const user = ref(null);
                 const loading = ref(true);
-                const modals = ref({ expense: false, entities: false, budget: false, editItem: false, stats: false });
+                const modals = ref({ expense: false, entities: false, budget: false, editItem: false, stats: false, finance: false });
                 
                 const authMode = ref('login');
                 const authForm = ref({ email: '', password: '' });
@@ -481,6 +769,83 @@
                     };
                 });
 
+                const financeStats = computed(() => {
+                    const monthData = months.map((name, i) => {
+                        const income = getEffectiveIncome(i);
+                        const expense = getMonthGrandTotal(i);
+                        const savings = income - expense;
+                        const rate = income > 0 ? Math.round((savings / income) * 100) : 0;
+                        return { name, i, income, expense, savings, rate };
+                    });
+                    const totalIncome = monthData.reduce((acc, m) => acc + m.income, 0);
+                    const totalExpense = getYearGrandTotal();
+                    const totalSavings = totalIncome - totalExpense;
+                    const avgSavingsRate = totalIncome > 0 ? Math.round((totalSavings / totalIncome) * 100) : 0;
+                    let running = 0;
+                    const runningData = monthData.map(m => { running += m.savings; return { ...m, running }; });
+                    return { monthData: runningData, totalIncome, totalExpense, totalSavings, avgSavingsRate };
+                });
+
+                const smartTips = computed(() => {
+                    const tips = [];
+                    const totalIncome = financeStats.value.totalIncome;
+                    const savingsRate = financeStats.value.avgSavingsRate;
+                    const cm = activeMonth.value;
+                    const curr = getMonthGrandTotal(cm);
+                    const prev = cm > 0 ? getMonthGrandTotal(cm - 1) : 0;
+                    const limit = getBudgetLimit(cm);
+                    const budgetUsed = limit > 0 ? (curr / limit) * 100 : 0;
+
+                    if (totalIncome === 0) {
+                        tips.push({ icon: 'info', hex: '#3b82f6', title: 'Configura tu ingreso', text: 'Ingresa tu sueldo mensual en Config para obtener mejores analisis y consejos personalizados.' });
+                    }
+                    if (savingsRate >= 30) {
+                        tips.push({ icon: 'trophy', hex: '#10b981', title: 'Excelente capacidad de ahorro', text: 'Estas ahorrando mas del 30% de tus ingresos. Considera destinar parte a inversiones o un fondo de emergencia.' });
+                    } else if (savingsRate >= 10 && savingsRate < 20) {
+                        tips.push({ icon: 'target', hex: '#f59e0b', title: 'Mejora tu ahorro', text: 'Tu tasa esta entre 10-20%. La regla 50/30/20 sugiere ahorrar al menos el 20%. Revisa gastos hormiga.' });
+                    } else if (savingsRate >= 0 && savingsRate < 10 && totalIncome > 0) {
+                        tips.push({ icon: 'alert-triangle', hex: '#ef4444', title: 'Ahorro critico', text: 'Ahorras menos del 10%. Identifica 2-3 gastos no esenciales que puedas recortar este mes.' });
+                    } else if (savingsRate < 0) {
+                        tips.push({ icon: 'alert-circle', hex: '#ef4444', title: 'Gastas mas de lo que ganas', text: 'Estas en deficit. Prioriza eliminar gastos fijos innecesarios y evita nuevas cuotas hasta equilibrar.' });
+                    }
+
+                    if (prev > 0 && curr > prev * 1.2) {
+                        const pct = Math.round((curr / prev - 1) * 100);
+                        tips.push({ icon: 'trending-up', hex: '#f59e0b', title: 'Gasto en aumento', text: `Tus gastos de ${months[cm]} subieron un ${pct}% respecto a ${months[cm - 1]}. Revisa si hay compras extraordinarias.` });
+                    } else if (prev > 0 && curr < prev * 0.8) {
+                        const pct = Math.round((1 - curr / prev) * 100);
+                        tips.push({ icon: 'trending-down', hex: '#10b981', title: 'Buen control de gastos', text: `Redujiste un ${pct}% tus gastos respecto al mes anterior. Segui asi.` });
+                    }
+
+                    if (budgetUsed > 95) {
+                        tips.push({ icon: 'alert-circle', hex: '#ef4444', title: 'Presupuesto superado', text: 'Superaste tu limite de gasto. Evita compras no planificadas el resto del mes.' });
+                    } else if (budgetUsed > 80) {
+                        tips.push({ icon: 'alert-triangle', hex: '#f59e0b', title: 'Presupuesto al limite', text: `Llevas el ${Math.round(budgetUsed)}% de tu presupuesto consumido. Controla los gastos restantes.` });
+                    }
+
+                    const fixedItems = currentYearTransactions.value.filter(t => t.type === 'recurring' && t.month === cm);
+                    const fixedTotal = fixedItems.reduce((a, t) => a + t.amount, 0);
+                    const fixedPct = curr > 0 ? Math.round((fixedTotal / curr) * 100) : 0;
+                    if (fixedPct > 70) {
+                        tips.push({ icon: 'lock', hex: '#f59e0b', title: 'Gastos fijos elevados', text: `El ${fixedPct}% de tus gastos son fijos. Intenta renegociar servicios o buscar alternativas mas economicas.` });
+                    }
+
+                    if (stats.value.topEntity && stats.value.topEntity.percent > 50 && stats.value.topEntity.name !== 'N/A') {
+                        tips.push({ icon: 'pie-chart', hex: '#3b82f6', title: 'Gasto concentrado', text: `"${stats.value.topEntity.name}" concentra el ${stats.value.topEntity.percent}% de tu gasto total. Diversificar reduce riesgo.` });
+                    }
+
+                    const installmentItems = currentYearTransactions.value.filter(t => t.type === 'installment' && t.month === cm);
+                    if (installmentItems.length > 5) {
+                        tips.push({ icon: 'layers', hex: '#8b5cf6', title: 'Muchas cuotas activas', text: `Tenes ${installmentItems.length} cuotas corriendo este mes. Evita sumar nuevas hasta liberar algunas.` });
+                    }
+
+                    if (tips.length === 0) {
+                        tips.push({ icon: 'check-circle', hex: '#10b981', title: 'Todo en orden', text: 'Tus finanzas se ven saludables. Segui manteniendo el control y planificando a futuro.' });
+                    }
+
+                    return tips;
+                });
+
                 const openGlobalBudgetModal = () => { budgetForm.value = { income: budget.value.income, limitPercent: budget.value.limitPercent, monthIndex: null }; modals.value.budget = true; };
                 const openBudgetModal = (monthIndex) => { const key = `${currentYear.value}-${monthIndex}`; const existingOverride = budget.value.monthlyIncomes?.[key]; budgetForm.value = { income: existingOverride !== undefined ? existingOverride : getEffectiveIncome(monthIndex), limitPercent: budget.value.limitPercent, monthIndex: monthIndex }; modals.value.budget = true; };
                 
@@ -585,18 +950,25 @@
                 const deleteEntity = async (ent) => { if(confirm("¿Borrar cuenta?")) await deleteDoc(doc(db, `users/${user.value.uid}/entities`, ent.id)); };
                 const openEditModal = (item) => { editForm.value = { ...item }; modals.value.editItem = true; };
 
-                onMounted(() => { onAuthStateChanged(auth, (u) => { user.value = u; if (u) subscribeToData(u.uid); else { transactions.value = []; entities.value = []; loading.value = false; } nextTick(() => lucide.createIcons()); }); });
+                onMounted(() => {
+                    document.body.setAttribute('data-theme', currentTheme.value);
+                    document.getElementById('metaThemeColor')?.setAttribute('content',
+                        currentTheme.value === 'light' ? '#f1f5f9' : currentTheme.value === 'sunset' ? '#0f0520' : '#030712');
+                    onAuthStateChanged(auth, (u) => { user.value = u; if (u) subscribeToData(u.uid); else { transactions.value = []; entities.value = []; loading.value = false; } nextTick(() => lucide.createIcons()); });
+                });
                 
-                watch([transactions, modals, activeMonth, desktopCollapsed, budget, showPassword], () => nextTick(() => lucide.createIcons()));
+                watch([transactions, modals, activeMonth, desktopCollapsed, budget, showPassword, currentTheme], () => nextTick(() => lucide.createIcons()));
 
                 return {
-                    months, currentYear, user, loading, sortedEntities, modals, form, entityForm, availableColors, authMode, authForm, authError, authLoading, budget, budgetForm, editForm, stats,
+                    months, currentYear, user, loading, sortedEntities, modals, form, entityForm, availableColors, authMode, authForm, authError, authLoading, budget, budgetForm, editForm, stats, financeStats, smartTips,
                     activeMonth, activeView, expandedEntity, toggleEntity, desktopCollapsed, toggleDesktopCollapse, isDesktopCollapsed, showPassword,
+                    currentTheme, themeLabels, themeIcons, cycleTheme,
                     changeYear: (d) => currentYear.value += d, loginWithGoogle, handleAuth, logout,
                     addExpense, updateItem, deleteItem, saveEntity, editEntity, deleteEntity, saveBudget, openEditModal, openGlobalBudgetModal, openBudgetModal,
                     openExpenseModal: () => { form.value.startMonth = activeMonth.value; if(entities.value.length===0) modals.value.entities=true; else modals.value.expense=true; },
                     openEntitiesModal: () => { entityForm.value = { id: null, name: '', color: availableColors[6] }; modals.value.entities = true; },
                     openStatsModal: () => modals.value.stats = true,
+                    openFinanceModal: () => modals.value.finance = true,
                     getItems, getMonthEntityTotal, getYearEntityTotal, getMonthGrandTotal, getYearGrandTotal, formatCurrency, isCurrentMonth, getEffectiveIncome, getBudgetLimit, getBudgetStatusClass, getBudgetBgClass
                 };
             }
