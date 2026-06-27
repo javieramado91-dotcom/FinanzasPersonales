@@ -272,6 +272,11 @@
                     <div class="flex items-center bg-gray-900 rounded-full border border-gray-800 p-1 shadow-inner">
                         <button @click="changeYear(-1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button><span class="font-mono font-bold text-primary-500 text-sm px-4">{{ currentYear }}</span><button @click="changeYear(1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                     </div>
+                    <div class="flex md:hidden items-center gap-1.5">
+                         <button @click="openEntitiesModal" class="w-9 h-9 flex items-center justify-center bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition"><i data-lucide="credit-card" class="w-4 h-4 text-gray-400"></i></button>
+                         <button @click="openGlobalBudgetModal" class="w-9 h-9 flex items-center justify-center bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition"><i data-lucide="settings" class="w-4 h-4 text-gray-400"></i></button>
+                         <button @click="logout" class="w-9 h-9 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl transition"><i data-lucide="log-out" class="w-3.5 h-3.5"></i></button>
+                    </div>
                     <div class="hidden md:flex items-center gap-2">
                          <button @click="cycleTheme" class="theme-btn h-10 w-10 flex items-center justify-center bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl transition" :title="'Tema: ' + themeLabels[currentTheme]"><i :data-lucide="themeIcons[currentTheme]" class="w-4 h-4 text-primary-500"></i></button>
                          <button @click="openFinanceModal" class="h-10 px-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl text-sm font-bold text-gray-300 hover:text-white transition flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4 text-primary-500"></i> Finanzas</button>
