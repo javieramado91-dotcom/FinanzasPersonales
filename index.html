@@ -272,10 +272,10 @@
                     <div class="flex items-center bg-gray-900 rounded-full border border-gray-800 p-1 shadow-inner">
                         <button @click="changeYear(-1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button><span class="font-mono font-bold text-primary-500 text-sm px-4">{{ currentYear }}</span><button @click="changeYear(1)" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                     </div>
-                    <div class="flex md:hidden items-center gap-1.5">
-                         <button @click="openEntitiesModal" class="w-9 h-9 flex items-center justify-center bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition"><i data-lucide="credit-card" class="w-4 h-4 text-gray-400"></i></button>
-                         <button @click="openGlobalBudgetModal" class="w-9 h-9 flex items-center justify-center bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition"><i data-lucide="settings" class="w-4 h-4 text-gray-400"></i></button>
-                         <button @click="logout" class="w-9 h-9 flex items-center justify-center bg-red-500/10 text-red-500 rounded-xl transition"><i data-lucide="log-out" class="w-3.5 h-3.5"></i></button>
+                    <div class="flex md:hidden items-center gap-1">
+                         <button @click="cycleTheme" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 active:bg-gray-800 transition"><i :data-lucide="themeIcons[currentTheme]" class="w-4 h-4"></i></button>
+                         <button @click="openGlobalBudgetModal" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 active:bg-gray-800 transition"><i data-lucide="settings" class="w-4 h-4"></i></button>
+                         <button @click="logout" class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500/70 active:bg-red-500/10 transition"><i data-lucide="log-out" class="w-3.5 h-3.5"></i></button>
                     </div>
                     <div class="hidden md:flex items-center gap-2">
                          <button @click="cycleTheme" class="theme-btn h-10 w-10 flex items-center justify-center bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 rounded-xl transition" :title="'Tema: ' + themeLabels[currentTheme]"><i :data-lucide="themeIcons[currentTheme]" class="w-4 h-4 text-primary-500"></i></button>
@@ -432,10 +432,10 @@
                 </div>
                 <div class="glass-nav safe-bottom flex justify-around items-center h-[72px] px-2 pt-1">
                     <button @click="activeView='home'" class="flex flex-col items-center justify-center w-14 gap-0.5 transition-colors" :class="activeView==='home' ? 'text-primary-500' : 'text-gray-500 active:text-gray-300'"><i data-lucide="home" class="w-5 h-5"></i><span class="text-[9px] font-bold">Inicio</span></button>
-                    <button @click="openFinanceModal" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i data-lucide="trending-up" class="w-5 h-5"></i><span class="text-[9px] font-bold">Finanzas</span></button>
+                    <button @click="openEntitiesModal" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i data-lucide="credit-card" class="w-5 h-5"></i><span class="text-[9px] font-bold">Cuentas</span></button>
                     <div class="w-16"></div>
+                    <button @click="openFinanceModal" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i data-lucide="trending-up" class="w-5 h-5"></i><span class="text-[9px] font-bold">Finanzas</span></button>
                     <button @click="openStatsModal" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i data-lucide="bar-chart-3" class="w-5 h-5"></i><span class="text-[9px] font-bold">Analisis</span></button>
-                    <button @click="cycleTheme" class="flex flex-col items-center justify-center w-14 gap-0.5 text-gray-500 active:text-gray-300 transition-colors"><i :data-lucide="themeIcons[currentTheme]" class="w-5 h-5"></i><span class="text-[9px] font-bold">{{ themeLabels[currentTheme] }}</span></button>
                 </div>
             </nav>
 
